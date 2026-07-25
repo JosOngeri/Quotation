@@ -24,7 +24,7 @@ export default function Login() {
       if (loginType === 'platform') {
         const result = platformLoginSchema.safeParse({ email, password })
         if (!result.success) {
-          setError(result.error.errors[0].message)
+          setError(result.error.issues[0].message)
           setLoading(false)
           return
         }
@@ -33,7 +33,7 @@ export default function Login() {
       } else if (loginType === 'client') {
         const result = clientLoginSchema.safeParse({ email, password })
         if (!result.success) {
-          setError(result.error.errors[0].message)
+          setError(result.error.issues[0].message)
           setLoading(false)
           return
         }
@@ -42,7 +42,7 @@ export default function Login() {
       } else {
         const result = tenantLoginSchema.safeParse({ email, password, workspaceSlug })
         if (!result.success) {
-          setError(result.error.errors[0].message)
+          setError(result.error.issues[0].message)
           setLoading(false)
           return
         }

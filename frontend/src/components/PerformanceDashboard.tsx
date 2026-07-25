@@ -149,7 +149,7 @@ const PerformanceDashboard: React.FC = () => {
 
       {slowRequests.length > 0 && (
         <div className="slow-requests">
-          <h3>Slow Requests (>1s)</h3>
+          <h3>Slow Requests ({'>'}1s)</h3>
           <div className="requests-table">
             <table>
               <thead>
