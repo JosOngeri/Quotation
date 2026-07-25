@@ -13,13 +13,14 @@ export class OAuthService {
   }
 
   private initializeStrategies(): void {
-    // Google OAuth Strategy
-    passport.use(new GoogleStrategy({
-      clientID: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5000/api/v1/auth/google/callback',
-      passReqToCallback: true
-    }, async (req: any, accessToken: string, refreshToken: string, profile: any, done: any) => {
+    // Google OAuth Strategy - only initialize if credentials are provided
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+      passport.use(new GoogleStrategy({
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5000/api/v1/auth/google/callback',
+        passReqToCallback: true
+      }, async (req: any, accessToken: string, refreshToken: string, profile: any, done: any) => {
       try {
         const email = profile.emails[0].value;
         const name = profile.displayName;
@@ -56,6 +57,9 @@ export class OAuthService {
         return done(error, null);
       }
     }));
+    } else {
+      console.log('Google OAuth credentials not provided, skipping OAuth strategy initialization');
+    }
   }
 
   async generateOAuthToken(user: any): Promise<string> {
