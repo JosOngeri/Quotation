@@ -1,158 +1,126 @@
 # Quotation.josongeri.co.ke Deployment Plan
 
 ## Overview
-This plan outlines the deployment of the Quotation Management System (QMS) to the subdomain `quotation.josongeri.co.ke` on the VPS at 173.249.17.180.
+This plan outlines the deployment of the Quotation Management System (QMS) to the subdomain `quotation.josongeri.co.ke` on the VPS at 173.249.17.180 using GitHub for deployment.
 
 ## Project Details
 - **Subdomain**: quotation.josongeri.co.ke
-- **Project Folder**: D:\VIbeCode\Quotation
+- **GitHub Repository**: https://github.com/JosOngeri/Quotation.git
 - **Tech Stack**: Node.js (Backend), React (Frontend), PostgreSQL
 - **VPS**: 173.249.17.180
 - **Web Server**: Caddy
 - **Process Manager**: PM2
 
-## Prerequisites
-- [ ] QMS is production-ready (mobile responsiveness implemented)
-- [ ] PostgreSQL database configured on VPS
-- [ ] Node.js 18+ installed on VPS
-- [ ] PM2 installed on VPS
-- [ ] Caddy web server configured
-- [ ] Environment variables configured for production
+## Deployment Method
+**GitHub-based deployment** - Clone/pull from GitHub on VPS instead of direct file transfer
 
 ## Deployment Steps
 
-### Step 1: Prepare Project Locally
-```bash
-cd D:\VIbeCode\Quotation
+### Step 1: Local Preparation (Already Done ✅)
+- [x] Build frontend locally
+- [x] Configure backend for runtime transpilation
+- [x] Create production environment files
+- [x] Push changes to GitHub
 
-# Build Frontend
-cd frontend
-npm run build
+### Step 2: VPS Deployment
+Run the deployment script on your VPS:
 
-# Build Backend
-cd ../backend
-npm run build
-
-# Test production build locally (optional)
-npm run start
-```
-
-### Step 2: Create Production Environment File
-```bash
-# Backend .env
-cd backend
-cp .env.example .env.production
-```
-
-Edit `.env.production` with production values:
-```env
-NODE_ENV=production
-DATABASE_URL=postgresql://qms_user:secure_password@localhost:5432/qms_production
-JWT_SECRET=<strong-random-secret>
-JWT_EXPIRES_IN=7d
-PORT=5001
-ALLOWED_ORIGINS=https://quotation.josongeri.co.ke
-TRUSTED_IPS=127.0.0.1,173.249.17.180
-```
-
-### Step 3: Upload Files to VPS
-```powershell
-# Upload entire project to VPS
-scp -r "D:\VIbeCode\Quotation" deploy@173.249.17.180:/home/deploy/quotation-upload
-```
-
-### Step 4: Set Up Directory Structure on VPS
 ```bash
 # SSH into VPS
 ssh deploy@173.249.17.180
 
-# Create directory structure
-sudo mkdir -p /var/www/subdomains/quotation
-sudo mkdir -p /var/www/qums/backend
-sudo mkdir -p /var/www/qms/frontend
-
-# Move files
-sudo mv /home/deploy/quotation-upload/backend/* /var/www/qms/backend/
-sudo mv /home/deploy/quotation-upload/frontend/dist/* /var/www/qms/frontend/
-
-# Set permissions
-sudo chown -R caddy:caddy /var/www/qms
-sudo chmod -R 755 /var/www/qms
+# Create deployment script
+nano deploy-qms.sh
 ```
 
-### Step 5: Set Up PostgreSQL Database
+Paste the following script content:
+
 ```bash
-# Create database and user
-sudo -u postgres psql
-```
+#!/bin/bash
+# QMS Deployment Script for quotation.josongeri.co.ke
 
-```sql
-CREATE DATABASE qms_production;
-CREATE USER qms_user WITH ENCRYPTED PASSWORD 'secure_password';
-GRANT ALL PRIVILEGES ON DATABASE qms_production TO qms_user;
-\q
-```
+GITHUB_REPO="https://github.com/JosOngeri/Quotation.git"
+PROJECT_DIR="/var/www/qms"
+SUBDOMAIN="quotation.josongeri.co.ke"
+BACKUP_DIR="/home/deploy/backups/qms"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-### Step 6: Run Database Migrations
-```bash
-cd /var/www/qms/backend
+echo "Starting QMS deployment to $SUBDOMAIN..."
 
-# Install dependencies
-npm install --production
+# Create backup directory
+mkdir -p $BACKUP_DIR
 
-# Run migrations
-DATABASE_URL=postgresql://qms_user:secure_password@localhost:5432/qms_production npm run db:migrate
+# Backup existing deployment if exists
+if [ -d "$PROJECT_DIR" ]; then
+    echo "Backing up existing deployment..."
+    sudo cp -r $PROJECT_DIR $BACKUP_DIR/qms-$TIMESTAMP
+fi
 
-# Seed database (optional)
-DATABASE_URL=postgresql://qms_user:secure_password@localhost:5432/qms_production npm run db:seed
-```
+# Clone or update repository
+if [ -d "$PROJECT_DIR" ]; then
+    echo "Updating existing repository..."
+    cd $PROJECT_DIR
+    sudo git fetch origin main
+    sudo git reset --hard origin/main
+else
+    echo "Cloning repository from GitHub..."
+    sudo git clone $GITHUB_REPO $PROJECT_DIR
+    cd $PROJECT_DIR
+fi
 
-### Step 7: Configure Backend Environment
-```bash
-cd /var/www/qms/backend
+# Set up directory structure
+echo "Setting up directory structure..."
+sudo mkdir -p $PROJECT_DIR/backend
+sudo mkdir -p $PROJECT_DIR/frontend
+sudo chown -R caddy:caddy $PROJECT_DIR
+sudo chmod -R 755 $PROJECT_DIR
 
-# Create .env file
-sudo nano .env
-```
+# Set up PostgreSQL database
+echo "Setting up PostgreSQL database..."
+sudo -u postgres psql -c "CREATE DATABASE qms_production;" 2>/dev/null || echo "Database may already exist"
+sudo -u postgres psql -c "CREATE USER qms_user WITH ENCRYPTED PASSWORD 'qms_secure_password_2024';" 2>/dev/null || echo "User may already exist"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE qms_production TO qms_user;"
 
-Add production environment variables:
-```env
+# Install backend dependencies and run migrations
+echo "Installing backend dependencies and running migrations..."
+cd $PROJECT_DIR/backend
+sudo npm install --production
+DATABASE_URL=postgresql://qms_user:qms_secure_password_2024@localhost:5432/qms_production sudo npm run db:migrate
+
+# Configure backend environment
+echo "Configuring backend environment..."
+cat > .env << 'EOF'
 NODE_ENV=production
-DATABASE_URL=postgresql://qms_user:secure_password@localhost:5432/qms_production
-JWT_SECRET=<strong-random-secret>
+DATABASE_URL=postgresql://qms_user:qms_secure_password_2024@localhost:5432/qms_production
+JWT_SECRET=qms_jwt_secret_2024_secure_random_string
 JWT_EXPIRES_IN=7d
 PORT=5001
 ALLOWED_ORIGINS=https://quotation.josongeri.co.ke
 TRUSTED_IPS=127.0.0.1,173.249.17.180
-```
+EOF
 
-### Step 8: Start Backend with PM2
-```bash
-# Start backend application
-cd /var/www/qms/backend
-pm2 start dist/index.js --name qms-backend
+# Build frontend
+echo "Building frontend..."
+cd $PROJECT_DIR/frontend
+sudo npm install
+sudo npm run build
 
-# Save PM2 configuration
+# Start backend with PM2
+echo "Starting backend with PM2..."
+cd $PROJECT_DIR/backend
+pm2 stop qms-backend 2>/dev/null || echo "No existing process"
+pm2 start "npx tsx src/index.ts" --name qms-backend
 pm2 save
-pm2 startup
-```
 
-### Step 9: Configure Caddy for quotation.josongeri.co.ke
-```bash
-sudo nano /etc/caddy/Caddyfile
-```
+# Configure Caddy
+echo "Configuring Caddy for $SUBDOMAIN..."
+sudo tee -a /etc/caddy/Caddyfile << 'EOF'
 
-Add this configuration block:
-```
 quotation.josongeri.co.ke {
-    # Frontend static files
-    root * /var/www/qms/frontend
+    root * /var/www/qms/frontend/dist
     file_server
-    
-    # SPA support - redirect all routes to index.html
     try_files {path} {path}/ /index.html
     
-    # API proxy to backend
     handle /api/* {
         reverse_proxy localhost:5001
         header_up Host {host}
@@ -161,7 +129,6 @@ quotation.josongeri.co.ke {
         header_up X-Forwarded-Proto {scheme}
     }
     
-    # API documentation proxy
     handle /api-docs {
         reverse_proxy localhost:5001
         header_up Host {host}
@@ -170,58 +137,112 @@ quotation.josongeri.co.ke {
         header_up X-Forwarded-Proto {scheme}
     }
     
-    # Health check endpoint
     handle /health {
         reverse_proxy localhost:5001/api/health
     }
     
-    # Static file caching
     @static {
         path *.js *.css *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot
     }
     header @static Cache-Control "public, max-age=31536000, immutable"
     
-    # Security headers
     header X-Content-Type-Options "nosniff"
     header X-Frame-Options "DENY"
     header X-XSS-Protection "1; mode=block"
     header Referrer-Policy "strict-origin-when-cross-origin"
     
-    # Enable automatic HTTPS
     encode gzip
 }
-```
+EOF
 
-### Step 10: Reload Caddy
-```bash
 sudo systemctl reload caddy
+
+# Verify deployment
+echo "Verifying deployment..."
+pm2 status
+sudo systemctl status caddy --no-pager
+curl -s http://localhost:5001/health
+curl -s https://$SUBDOMAIN
+
+echo "Deployment completed successfully!"
+echo "Visit https://$SUBDOMAIN to access your QMS application"
 ```
 
-### Step 11: Verify Deployment
 ```bash
-# Check Caddy status
-sudo systemctl status caddy
+# Make script executable
+chmod +x deploy-qms.sh
 
+# Run deployment
+./deploy-qms.sh
+```
+
+### Step 3: Verify Deployment
+```bash
 # Check PM2 status
 pm2 status
-pm2 logs qms-backend
 
-# Check backend is running
-curl http://localhost:5001/health
+# Check Caddy status
+sudo systemctl status caddy
 
 # Test the subdomain
 curl https://quotation.josongeri.co.ke
 ```
 
-### Step 12: Browser Testing
-1. Visit `https://quotation.josongeri.co.ke`
-2. Verify SSL certificate is working (automatic with Caddy)
-3. Test all functionality:
-   - User registration/login
-   - Quote creation
-   - Mobile responsiveness
-   - API endpoints
-4. Check browser console for errors
+## Future Updates
+
+To update the application after making changes:
+
+1. **Local changes**:
+```bash
+cd D:\VIbeCode\Quotation
+# Make changes
+git add .
+git commit -m "Update description"
+git push origin main
+```
+
+2. **VPS update**:
+```bash
+ssh deploy@173.249.17.180
+cd /var/www/qms
+git pull origin main
+cd backend
+npm install --production
+pm2 restart qms-backend
+cd ../frontend
+npm install
+npm run build
+sudo systemctl reload caddy
+```
+
+## Troubleshooting
+
+### Backend Not Starting
+```bash
+pm2 logs qms-backend
+pm2 restart qms-backend
+```
+
+### Database Issues
+```bash
+sudo -u postgres psql -d qms_production
+# Check database connectivity
+```
+
+### Caddy Issues
+```bash
+sudo journalctl -u caddy -f
+sudo systemctl reload caddy
+```
+
+## Success Criteria
+
+- [ ] Application loads at https://quotation.josongeri.co.ke
+- [ ] SSL certificate is valid (automatic with Caddy)
+- [ ] All API endpoints work correctly
+- [ ] Mobile responsiveness works on mobile devices
+- [ ] Database connections are stable
+- [ ] No errors in Caddy or PM2 logs
 
 ## Monitoring and Maintenance
 
