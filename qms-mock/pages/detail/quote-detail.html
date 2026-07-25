@@ -1,0 +1,123 @@
+<div class="detail-header">
+    <div>
+        <div class="breadcrumb">
+            <span class="breadcrumb-item back-to-list">Quotes</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item">{id}</span>
+        </div>
+        <div class="detail-title">{id} - Reception feature wall</div>
+    </div>
+    <div class="detail-actions">
+        <button class="btn btn-secondary">Duplicate</button>
+        <button class="btn btn-primary" onclick="openModal('send-quote-modal')">Generate PDF & Send</button>
+    </div>
+</div>
+
+<div class="detail-content">
+    <div class="detail-grid">
+        <div class="detail-main">
+            <h3 style="margin-bottom: 15px;">Quote Structure</h3>
+            
+            <div class="quote-tree">
+                <div class="tree-node section">
+                    <div class="tree-node-header">
+                        <span class="tree-node-title">1. Section: Signage</span>
+                        <span class="tree-node-amount">KES 19,300</span>
+                    </div>
+                </div>
+                <div class="tree-node subsection">
+                    <div class="tree-node-header">
+                        <span class="tree-node-title">1.1 Subsection: Illuminated</span>
+                        <span class="tree-node-amount">KES 19,300</span>
+                    </div>
+                </div>
+                <div class="tree-node item">
+                    <div class="tree-node-header">
+                        <span class="tree-node-title">1.1.1 Custom illuminated logo signage</span>
+                        <span class="tree-node-amount">KES 12,500</span>
+                    </div>
+                </div>
+                <div class="tree-node item">
+                    <div class="tree-node-header">
+                        <span class="tree-node-title">1.1.2 3D acrylic lettering</span>
+                        <span class="tree-node-amount">KES 6,800</span>
+                    </div>
+                </div>
+                
+                <div class="tree-node section">
+                    <div class="tree-node-header">
+                        <span class="tree-node-title">2. Section: Installation</span>
+                        <span class="tree-node-amount">KES 34,000</span>
+                    </div>
+                </div>
+                <div class="tree-node item">
+                    <div class="tree-node-header">
+                        <span class="tree-node-title">2.1 Installation labour</span>
+                        <span class="tree-node-amount">KES 34,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
+                <div class="info-row">
+                    <span class="info-label">Subtotal</span>
+                    <span class="info-value">KES 53,300</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tax (16%)</span>
+                    <span class="info-value">KES 8,528</span>
+                </div>
+                <div class="info-row" style="border-bottom: none;">
+                    <span class="info-label" style="font-weight: 600;">Total</span>
+                    <span class="info-value" style="font-weight: 600; font-size: 18px;">KES 61,828</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-sidebar">
+            <h3 style="margin-bottom: 15px;">Quote Details</h3>
+            
+            <div class="info-row">
+                <span class="info-label">Client</span>
+                <span class="info-value">Acme Creative Studio</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Contact</span>
+                <span class="info-value">Jane Wanjiku</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="info-value"><span class="status-badge status-published">Published</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Currency</span>
+                <span class="info-value">KES</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Valid Until</span>
+                <span class="info-value">Aug 11, 2026</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Created</span>
+                <span class="info-value">Jul 15, 2026</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Created By</span>
+                <span class="info-value">Jane Doe</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Template</span>
+                <span class="info-value">Standard Quote v3</span>
+            </div>
+            <div class="info-row" style="border-bottom: none;">
+                <span class="info-label">Revision</span>
+                <span class="info-value">v2 (current)</span>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;">View Revision History</button>
+                <button class="btn btn-secondary" style="width: 100%;">Create New Revision</button>
+            </div>
+        </div>
+    </div>
+</div>

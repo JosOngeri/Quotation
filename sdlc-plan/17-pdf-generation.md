@@ -1,0 +1,5 @@
+# 17. PDF Generation
+
+Generate PDFs from a frozen quote revision and published template version, not live mutable data. Store document metadata: revision/template IDs, renderer version, checksum, creation actor/time, object key, access policy, and delivery history. Render in a controlled worker/service with bounded CPU/time, sanitised template data, embedded permitted branding, deterministic pagination, and accessibility-friendly HTML source. Test renderer upgrade differences with golden files.
+
+Email delivery queues the PDF/link, records provider message ID and sent/delivered/bounced status via verified webhook, retries transient failures idempotently, and falls back to support workflow. Batch creation is queued/rate-limited and reports per-item result. Password protection/watermarking are optional client requirements; they do not replace authorization. Documents use authorized portal download or short-lived signed object URLs; PDF contains client values only and never supplier cost/margin. Templates and client data follow [Customization](11-input-output-customization.md).

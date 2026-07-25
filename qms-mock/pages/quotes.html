@@ -1,0 +1,82 @@
+<div class="page-header">
+    <h2 class="page-title">Quotes</h2>
+    <p class="page-subtitle">Manage all quotations</p>
+</div>
+
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-title">All Quotes</div>
+        <div>
+            <button class="btn btn-secondary">Filter</button>
+            <button class="btn btn-primary" onclick="openModal('new-quote-modal')">+ New Quote</button>
+        </div>
+    </div>
+    <div class="section-content">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Quote #</th>
+                    <th>Client</th>
+                    <th>Title</th>
+                    <th>Created</th>
+                    <th>Valid Until</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="clickable quote-row" data-quote-id="QT-2026-001">
+                    <td>QT-2026-001</td>
+                    <td>Acme Creative Studio</td>
+                    <td>Reception feature wall</td>
+                    <td>Jul 15, 2026</td>
+                    <td>Aug 11, 2026</td>
+                    <td>KES 53,300</td>
+                    <td><span class="status-badge status-published">Published</span></td>
+                    <td>
+                        <button class="action-btn action-btn-view">View</button>
+                        <button class="action-btn action-btn-edit">Edit</button>
+                    </td>
+                </tr>
+                <tr class="clickable quote-row" data-quote-id="QT-2026-002">
+                    <td>QT-2026-002</td>
+                    <td>TechCorp Kenya</td>
+                    <td>Office signage package</td>
+                    <td>Jul 18, 2026</td>
+                    <td>Aug 15, 2026</td>
+                    <td>KES 125,000</td>
+                    <td><span class="status-badge status-draft">Draft</span></td>
+                    <td>
+                        <button class="action-btn action-btn-edit">Edit</button>
+                        <button class="action-btn action-btn-delete">Delete</button>
+                    </td>
+                </tr>
+                <tr class="clickable quote-row" data-quote-id="QT-2026-003">
+                    <td>QT-2026-003</td>
+                    <td>GreenLeaf Restaurant</td>
+                    <td>Menu boards & exterior</td>
+                    <td>Jul 10, 2026</td>
+                    <td>Aug 05, 2026</td>
+                    <td>KES 78,500</td>
+                    <td><span class="status-badge status-accepted">Accepted</span></td>
+                    <td>
+                        <button class="action-btn action-btn-view">View</button>
+                    </td>
+                </tr>
+                <tr class="clickable quote-row" data-quote-id="QT-2026-004">
+                    <td>QT-2026-004</td>
+                    <td>Safari Ventures</td>
+                    <td>Lodge directional signage</td>
+                    <td>Jul 20, 2026</td>
+                    <td>Aug 20, 2026</td>
+                    <td>KES 245,000</td>
+                    <td><span class="status-badge status-rejected">Rejected</span></td>
+                    <td>
+                        <button class="action-btn action-btn-view">View</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

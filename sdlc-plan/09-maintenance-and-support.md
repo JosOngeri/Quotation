@@ -1,0 +1,5 @@
+# 09. Maintenance and Support
+
+Support uses a ticket queue with severity: P1 data/security/outage (acknowledge 1 hour), P2 major workflow (one business day), P3 standard defect (three business days), P4 enhancement (backlog review). Triage reproduces, assesses client impact, assigns owner, communicates status, and adds regression coverage before closure.
+
+Hotfixes use an incident branch, focused review/tests, deploy approval, post-deploy smoke test, and postmortem for P1/P2. Version APIs/templates with compatibility rules; never alter published quote or document facts. Quarterly review indexes/query plans, dependency patches, access memberships, retention, backup restore, and provider costs. Performance optimization prioritizes measurement: pagination, indexed lookups, cached compiled templates, object storage/CDN documents, and bounded async work. Feature requests follow the change control in [Requirements](02-requirements-engineering.md).

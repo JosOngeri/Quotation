@@ -1,0 +1,26 @@
+# QMS Maintenance Cron Jobs
+# Add this to your crontab using: crontab -e
+
+# Dependency Update - Every Monday at 9 AM UTC
+# 0 9 * * 1 /path/to/backend/scripts/dependency-update.sh >> /var/log/qms/dependency-update.log 2>&1
+
+# Security Scan - Daily at 3 AM UTC
+# 0 3 * * * /path/to/backend/scripts/security-scan.sh >> /var/log/qms/security-scan.log 2>&1
+
+# Log Rotation - Daily at 2 AM UTC
+# 0 2 * * * /path/to/backend/scripts/log-rotation.sh >> /var/log/qms/log-rotation.log 2>&1
+
+# Database Maintenance - Every Sunday at 4 AM UTC
+# 0 4 * * 0 /path/to/backend/scripts/database-maintenance.sh >> /var/log/qms/database-maintenance.log 2>&1
+
+# Certificate Renewal - Daily at 1 AM UTC
+# 0 1 * * * /path/to/backend/scripts/certificate-renewal.sh >> /var/log/qms/certificate-renewal.log 2>&1
+
+# Backup Verification - Daily at 5 AM UTC
+# 0 5 * * * /path/to/backend/scripts/backup-verification.sh >> /var/log/qms/backup-verification.log 2>&1
+
+# Capacity Planning - Every Monday at 8 AM UTC
+# 0 8 * * 1 /path/to/backend/scripts/capacity-planning.sh >> /var/log/qms/capacity-planning.log 2>&1
+
+# Cost Monitoring - Every Monday at 8 AM UTC
+# 0 8 * * 1 /path/to/backend/scripts/cost-monitoring.sh >> /var/log/qms/cost-monitoring.log 2>&1

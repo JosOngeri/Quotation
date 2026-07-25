@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mock Quotation — Joscards</title>
+  <style>
+    :root { --ink: #202020; --muted: #666; --accent: #8b1e3f; --line: #d9d9d9; --soft: #f7f4f5; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #ececec; color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
+    .page { width: 210mm; min-height: 297mm; margin: 18px auto; padding: 16mm 15mm; background: #fff; box-shadow: 0 1px 10px #0002; }
+    .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding-bottom: 18px; border-bottom: 4px solid var(--accent); }
+    .brand { font-size: 26px; font-weight: 800; letter-spacing: .4px; color: var(--accent); }
+    .tagline { margin-top: 4px; color: var(--muted); font-size: 11px; letter-spacing: 1.3px; text-transform: uppercase; }
+    .document-title { margin: 0; font-size: 30px; letter-spacing: 1px; text-align: right; }
+    .quote-meta { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.55; text-align: right; }
+    .client-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 42px; margin: 27px 0 24px; font-size: 13px; }
+    .section-label { margin-bottom: 8px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .client-grid p { margin: 3px 0; line-height: 1.45; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { padding: 10px 8px; background: var(--accent); color: #fff; font-size: 10px; letter-spacing: .7px; text-align: left; text-transform: uppercase; }
+    td { padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th:nth-child(1), td:nth-child(1) { width: 7%; text-align: center; }
+    th:nth-child(3), td:nth-child(3) { width: 12%; text-align: center; }
+    th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5) { width: 17%; text-align: right; }
+    .summary { width: 43%; margin: 18px 0 0 auto; font-size: 12px; }
+    .summary div { display: flex; justify-content: space-between; gap: 24px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    .summary .total { background: var(--accent); color: #fff; border: 0; font-size: 14px; font-weight: 700; }
+    .details { display: grid; grid-template-columns: 1.05fr .95fr; gap: 35px; margin-top: 33px; }
+    .panel { padding: 14px 16px; border: 1px solid var(--line); background: var(--soft); font-size: 12px; line-height: 1.55; }
+    .panel h2 { margin: 0 0 9px; color: var(--accent); font-size: 12px; letter-spacing: .8px; text-transform: uppercase; }
+    .panel p { margin: 4px 0; }
+    .footer { margin-top: 34px; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .footer strong { color: var(--ink); }
+    @media print { body { background: #fff; } .page { width: auto; min-height: 0; margin: 0; box-shadow: none; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <div>
+        <div class="brand">HANDCRAFTED BY JOSCARDS</div>
+        <div class="tagline">Custom signage · interiors · fabrication</div>
+      </div>
+      <div>
+        <h1 class="document-title">QUOTATION</h1>
+        <div class="quote-meta">Quotation No.: QT-2026-001<br>Date: 20 July 2026<br>Valid for: 21 days</div>
+      </div>
+    </header>
+
+    <section class="client-grid">
+      <div>
+        <div class="section-label">Prepared for</div>
+        <p><strong>Acme Creative Studio</strong></p>
+        <p>Attn: Jane Wanjiku</p>
+        <p>Nairobi, Kenya</p>
+      </div>
+      <div>
+        <div class="section-label">Project</div>
+        <p><strong>Reception Feature Wall &amp; Signage</strong></p>
+        <p>c/o: Acme Creative Studio</p>
+        <p>Estimated duration: 3 day(s)</p>
+      </div>
+    </section>
+
+    <table>
+      <thead><tr><th>#</th><th>Description</th><th>Qty</th><th>Rate (KES)</th><th>Amount (KES)</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Custom illuminated reception logo signage</td><td>1</td><td>12,500</td><td>12,500</td></tr>
+        <tr><td>2</td><td>Aluminium composite panel feature-wall cladding</td><td>1</td><td>9,500</td><td>9,500</td></tr>
+        <tr><td>3</td><td>3D acrylic cut lettering</td><td>1</td><td>6,800</td><td>6,800</td></tr>
+        <tr><td>4</td><td>Acrylic display panels and finishing</td><td>1</td><td>4,200</td><td>4,200</td></tr>
+        <tr><td>5</td><td>Installation, mounting hardware and site works</td><td>1</td><td>6,000</td><td>6,000</td></tr>
+        <tr><td>6</td><td>Transport and delivery</td><td>1</td><td>2,000</td><td>2,000</td></tr>
+      </tbody>
+    </table>
+
+    <section class="summary">
+      <div><span>Subtotal</span><strong>KES 41,000</strong></div>
+      <div><span>Labour (30%)</span><strong>KES 12,300</strong></div>
+      <div><span>Shipping / Handling</span><strong>KES 0</strong></div>
+      <div class="total"><span>TOTAL</span><span>KES 53,300</span></div>
+    </section>
+
+    <section class="details">
+      <div class="panel">
+        <h2>Remarks / Instructions</h2>
+        <p>Pricing is subject to change based on the current cost of materials.</p>
+        <p>Artwork, dimensions and final finishes must be approved before production begins.</p>
+        <p>Quotation is valid for 21 days from the date above.</p>
+      </div>
+      <div class="panel">
+        <h2>Payment details</h2>
+        <p><strong>Deposit due:</strong> KES 47,150</p>
+        <p><strong>Balance due:</strong> KES 6,150</p>
+        <p>Deposit comprises 85% of materials plus labour.</p>
+        <p><strong>Paybill:</strong> 522522 &nbsp; <strong>Account:</strong> 1282063014</p>
+        <p><strong>Bank:</strong> KCB</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <strong>Thank you for your business.</strong><br>
+      For questions concerning this quotation, please contact Josiah Ongeri: +254 736 075 771 · hbjoscards@gmail.com
+    </footer>
+  </main>
+</body>
+</html>

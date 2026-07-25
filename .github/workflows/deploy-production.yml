@@ -1,0 +1,97 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    
+    - name: Install dependencies (backend)
+      run: |
+        cd backend
+        npm ci
+    
+    - name: Install dependencies (frontend)
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Run tests
+      run: |
+        cd backend && npm test
+        cd ../frontend && npm test
+    
+    - name: Run linting
+      run: |
+        cd backend && npm run lint
+        cd ../frontend && npm run lint
+    
+    - name: Build backend
+      run: |
+        cd backend
+        npm run build
+    
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Create backup
+      run: |
+        echo "Creating database backup before deployment"
+        # Add your backup logic here
+        # ssh user@production-server 'pg_dump -U postgres qms > backup_$(date +%Y%m%d_%H%M%S).sql'
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment"
+        # Add your actual deployment logic here
+        # Example: SSH to production server and deploy
+        # scp -r backend/dist user@production-server:/var/www/qms/backend/
+        # scp -r frontend/dist user@production-server:/var/www/qms/frontend/
+        # ssh user@production-server 'cd /var/www/qms/backend && pm2 restart qms-backend'
+        # ssh user@production-server 'cd /var/www/qms/frontend && pm2 restart qms-frontend'
+    
+    - name: Run database migrations
+      run: |
+        echo "Running database migrations on production"
+        # Add your migration logic here
+        # ssh user@production-server 'cd /var/www/qms/backend && npm run db:migrate'
+    
+    - name: Health check
+      run: |
+        echo "Performing health check on production"
+        # Add your health check logic here
+        # curl -f https://yourdomain.com/health || exit 1
+    
+    - name: Smoke tests
+      run: |
+        echo "Running smoke tests"
+        # Add your smoke test logic here
+        # curl -f https://yourdomain.com/api/health
+        # curl -f https://yourdomain.com/api-docs
+        # Test critical endpoints
+    
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "Deployment to production successful"
+          # Add your notification logic here (Slack, email, etc.)
+        else
+          echo "Deployment to production failed"
+          # Add your notification logic here
+          # Rollback logic could be triggered here
+        fi

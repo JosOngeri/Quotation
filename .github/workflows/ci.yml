@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies (backend)
+      run: |
+        cd backend
+        npm ci
+    
+    - name: Run backend tests
+      run: |
+        cd backend
+        npm test
+    
+    - name: Run backend linting
+      run: |
+        cd backend
+        npm run lint
+    
+    - name: Install dependencies (frontend)
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm test
+    
+    - name: Run frontend linting
+      run: |
+        cd frontend
+        npm run lint
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    
+    - name: Build backend
+      run: |
+        cd backend
+        npm run build
+    
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts
+        path: |
+          backend/dist
+          frontend/dist
+        retention-days: 7
+
+  security:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Run security audit (backend)
+      run: |
+        cd backend
+        npm audit --audit-level=moderate
+    
+    - name: Run security audit (frontend)
+      run: |
+        cd frontend
+        npm audit --audit-level=moderate

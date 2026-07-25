@@ -1,0 +1,72 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    
+    - name: Install dependencies (backend)
+      run: |
+        cd backend
+        npm ci
+    
+    - name: Install dependencies (frontend)
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Build backend
+      run: |
+        cd backend
+        npm run build
+    
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment"
+        # Add your actual deployment logic here
+        # Example: SSH to staging server and deploy
+        # scp -r backend/dist user@staging-server:/var/www/qms/backend/
+        # scp -r frontend/dist user@staging-server:/var/www/qms/frontend/
+        # ssh user@staging-server 'cd /var/www/qms/backend && pm2 restart qms-backend'
+        # ssh user@staging-server 'cd /var/www/qms/frontend && pm2 restart qms-frontend'
+    
+    - name: Run database migrations
+      run: |
+        echo "Running database migrations on staging"
+        # Add your migration logic here
+        # ssh user@staging-server 'cd /var/www/qms/backend && npm run db:migrate'
+    
+    - name: Health check
+      run: |
+        echo "Performing health check on staging"
+        # Add your health check logic here
+        # curl -f https://staging.yourdomain.com/health || exit 1
+    
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "Deployment to staging successful"
+          # Add your notification logic here (Slack, email, etc.)
+        else
+          echo "Deployment to staging failed"
+          # Add your notification logic here
+        fi

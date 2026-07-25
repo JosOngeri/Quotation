@@ -1,0 +1,116 @@
+<div class="page-header">
+    <h2 class="page-title">Dashboard</h2>
+    <p class="page-subtitle">Welcome back, Jane. Here's what's happening today.</p>
+</div>
+
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="label">Active Quotes</div>
+        <div class="value">24</div>
+        <div class="change positive">+3 this week</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Pending Approvals</div>
+        <div class="value">7</div>
+        <div class="change negative">-2 from yesterday</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Active Projects</div>
+        <div class="value">12</div>
+        <div class="change positive">+1 this week</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Cost Variance</div>
+        <div class="value">-2.3%</div>
+        <div class="change positive">Improved 0.5%</div>
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-title">Recent Quotes</div>
+        <button class="btn btn-secondary" onclick="navigateTo('quotes')">View All</button>
+    </div>
+    <div class="section-content">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Quote #</th>
+                    <th>Client</th>
+                    <th>Title</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="clickable quote-row" data-quote-id="QT-2026-001">
+                    <td>QT-2026-001</td>
+                    <td>Acme Creative Studio</td>
+                    <td>Reception feature wall</td>
+                    <td>KES 53,300</td>
+                    <td><span class="status-badge status-published">Published</span></td>
+                    <td>
+                        <button class="action-btn action-btn-view">View</button>
+                    </td>
+                </tr>
+                <tr class="clickable quote-row" data-quote-id="QT-2026-002">
+                    <td>QT-2026-002</td>
+                    <td>TechCorp Kenya</td>
+                    <td>Office signage package</td>
+                    <td>KES 125,000</td>
+                    <td><span class="status-badge status-draft">Draft</span></td>
+                    <td>
+                        <button class="action-btn action-btn-edit">Edit</button>
+                    </td>
+                </tr>
+                <tr class="clickable quote-row" data-quote-id="QT-2026-003">
+                    <td>QT-2026-003</td>
+                    <td>GreenLeaf Restaurant</td>
+                    <td>Menu boards & exterior</td>
+                    <td>KES 78,500</td>
+                    <td><span class="status-badge status-accepted">Accepted</span></td>
+                    <td>
+                        <button class="action-btn action-btn-view">View</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="section-header">
+        <div class="section-title">Active Projects</div>
+        <button class="btn btn-secondary" onclick="navigateTo('projects')">View All</button>
+    </div>
+    <div class="section-content">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Client</th>
+                    <th>Progress</th>
+                    <th>Variance</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="clickable project-row" data-project-id="PRJ-001">
+                    <td>Reception feature wall</td>
+                    <td>Acme Creative Studio</td>
+                    <td>65%</td>
+                    <td>-KES 3,450</td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                </tr>
+                <tr class="clickable project-row" data-project-id="PRJ-002">
+                    <td>Menu boards & exterior</td>
+                    <td>GreenLeaf Restaurant</td>
+                    <td>30%</td>
+                    <td>KES 0</td>
+                    <td><span class="status-badge status-active">Active</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

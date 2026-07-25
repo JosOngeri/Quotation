@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMS - Quotation Management System Mock</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+        .app-container { display: flex; height: 100vh; }
+        .sidebar { width: 250px; background: #1a1a2e; color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #333; }
+        .sidebar-header h1 { font-size: 18px; font-weight: 600; }
+        .sidebar-header .subtitle { font-size: 12px; color: #888; margin-top: 5px; }
+        .workspace-switcher { padding: 15px 20px; background: #16213e; border-bottom: 1px solid #333; }
+        .workspace-switcher select { width: 100%; padding: 8px; background: #0f3460; color: white; border: 1px solid #333; border-radius: 4px; }
+        .nav-menu { flex: 1; overflow-y: auto; padding: 10px 0; }
+        .nav-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
+        .nav-item:hover { background: #0f3460; }
+        .nav-item.active { background: #e94560; }
+        .nav-section { padding: 10px 20px 5px; font-size: 11px; text-transform: uppercase; color: #666; letter-spacing: 1px; }
+        .sidebar-footer { padding: 15px 20px; border-top: 1px solid #333; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-avatar { width: 32px; height: 32px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .user-name { font-size: 13px; font-weight: 500; }
+        .user-role { font-size: 11px; color: #888; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { background: white; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; }
+        .search-bar { flex: 1; max-width: 400px; }
+        .search-bar input { width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; }
+        .top-bar-actions { display: flex; align-items: center; gap: 15px; }
+        .notification-btn { position: relative; cursor: pointer; padding: 8px; }
+        .notification-badge { position: absolute; top: 0; right: 0; background: #e94560; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s; }
+        .btn-primary { background: #e94560; color: white; }
+        .btn-primary:hover { background: #d63550; }
+        .btn-secondary { background: #f0f0f0; color: #333; }
+        .btn-secondary:hover { background: #e0e0e0; }
+        .content-area { flex: 1; overflow-y: auto; padding: 25px; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .page-header { margin-bottom: 25px; }
+        .page-title { font-size: 24px; font-weight: 600; margin-bottom: 5px; }
+        .page-subtitle { color: #666; font-size: 14px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-card .label { font-size: 13px; color: #666; margin-bottom: 8px; }
+        .stat-card .value { font-size: 28px; font-weight: 600; color: #1a1a2e; }
+        .stat-card .change { font-size: 12px; margin-top: 5px; }
+        .change.positive { color: #27ae60; }
+        .change.negative { color: #e74c3c; }
+        .section-card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .section-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .section-title { font-weight: 600; }
+        .section-content { padding: 0; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 12px 20px; background: #f8f8f8; font-weight: 600; font-size: 13px; color: #666; }
+        .data-table td { padding: 12px 20px; border-bottom: 1px solid #eee; }
+        .data-table tr:hover { background: #f9f9f9; }
+        .data-table tr.clickable { cursor: pointer; }
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .status-draft { background: #fff3cd; color: #856404; }
+        .status-published { background: #d4edda; color: #155724; }
+        .status-accepted { background: #cce5ff; color: #004085; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-completed { background: #cce5ff; color: #004085; }
+        .status-not-started { background: #e2e3e5; color: #383d41; }
+        .action-btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; }
+        .action-btn-view { background: #e3f2fd; color: #1976d2; }
+        .action-btn-edit { background: #fff3e0; color: #f57c00; }
+        .action-btn-delete { background: #ffebee; color: #c62828; }
+        .client-portal { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .client-portal .sidebar { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .client-portal .main-content { background: rgba(255,255,255,0.95); }
+        .client-hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 25px; }
+        .client-hero h1 { font-size: 28px; margin-bottom: 10px; }
+        .tabs { display: flex; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+        .tab { padding: 12px 20px; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab:hover { background: #f9f9f9; }
+        .tab.active { border-bottom-color: #e94560; color: #e94560; font-weight: 500; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .form-textarea { min-height: 100px; resize: vertical; }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="app">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>QMS</h1>
+                <div class="subtitle">Quotation Management</div>
+            </div>
+            <div class="workspace-switcher">
+                <select><option>Joscards (Default)</option><option>Workspace 2</option></select>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-section">Main</div>
+                <div class="nav-item active" onclick="showPage('dashboard')"><span>📊</span><span>Dashboard</span></div>
+                <div class="nav-item" onclick="showPage('quotes')"><span>📋</span><span>Quotes</span></div>
+                <div class="nav-item" onclick="showPage('projects')"><span>🏗️</span><span>Projects</span></div>
+                <div class="nav-section">Management</div>
+                <div class="nav-item" onclick="showPage('clients')"><span>👥</span><span>Clients</span></div>
+                <div class="nav-item" onclick="showPage('suppliers')"><span>🏢</span><span>Suppliers</span></div>
+                <div class="nav-item" onclick="showPage('products')"><span>📦</span><span>Products</span></div>
+                <div class="nav-section">Reports</div>
+                <div class="nav-item" onclick="showPage('reports')"><span>📈</span><span>Reports</span></div>
+                <div class="nav-section">Settings</div>
+                <div class="nav-item" onclick="showPage('settings-users')"><span>👤</span><span>Users</span></div>
+                <div class="nav-item" onclick="showPage('settings-templates')"><span>📝</span><span>Templates</span></div>
+                <div class="nav-item" onclick="showPage('settings-audit')"><span>🔍</span><span>Audit Log</span></div>
+                <div class="nav-section">Portal</div>
+                <div class="nav-item" onclick="showPage('client-portal')" style="color: #e94560;"><span>🌐</span><span>Client Portal</span></div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">JD</div>
+                    <div><div class="user-name">Jane Doe</div><div class="user-role">Estimator</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="search-bar"><input type="text" placeholder="Search quotes, projects, clients..."></div>
+                <div class="top-bar-actions">
+                    <div class="notification-btn">🔔<span class="notification-badge">3</span></div>
+                    <button class="btn btn-primary" onclick="openModal('new-quote-modal')">+ New Quote</button>
+                </div>
+            </div>
+            <div class="content-area" id="content-area"></div>
+        </div>
+    </div>
+    <div id="modal-container"></div>
+    <script>
+        const pages = {
+            dashboard: `<div class="page-header"><h2 class="page-title">Dashboard</h2><p class="page-subtitle">Welcome back, Jane. Here's what's happening today.</p></div>
+                <div class="dashboard-grid">
+                    <div class="stat-card"><div class="label">Active Quotes</div><div class="value">24</div><div class="change positive">+3 this week</div></div>
+                    <div class="stat-card"><div class="label">Pending Approvals</div><div class="value">7</div><div class="change negative">-2 from yesterday</div></div>
+                    <div class="stat-card"><div class="label">Active Projects</div><div class="value">12</div><div class="change positive">+1 this week</div></div>
+                    <div class="stat-card"><div class="label">Cost Variance</div><div class="value">-2.3%</div><div class="change positive">Improved 0.5%</div></div>
+                </div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Recent Quotes</div><button class="btn btn-secondary" onclick="showPage('quotes')">View All</button></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Quote #</th><th>Client</th><th>Title</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-001</td><td>Acme Creative Studio</td><td>Reception feature wall</td><td>KES 53,300</td><td><span class="status-badge status-published">Published</span></td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-002</td><td>TechCorp Kenya</td><td>Office signage package</td><td>KES 125,000</td><td><span class="status-badge status-draft">Draft</span></td><td><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-003</td><td>GreenLeaf Restaurant</td><td>Menu boards & exterior</td><td>KES 78,500</td><td><span class="status-badge status-accepted">Accepted</span></td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-004</td><td>Safari Ventures</td><td>Lodge directional signage</td><td>KES 245,000</td><td><span class="status-badge status-rejected">Rejected</span></td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-005</td><td>Apex Holdings</td><td>Office wayfinding system</td><td>KES 180,000</td><td><span class="status-badge status-published">Published</span></td><td><button class="action-btn action-btn-view">View</button></td></tr></tbody></table></div></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Active Projects</div><button class="btn btn-secondary" onclick="showPage('projects')">View All</button></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Project</th><th>Client</th><th>Progress</th><th>Variance</th><th>Status</th></tr></thead>
+                    <tbody><tr class="clickable" onclick="showDetail('project')"><td>Reception feature wall</td><td>Acme Creative Studio</td><td>65%</td><td>-KES 3,450</td><td><span class="status-badge status-active">Active</span></td></tr>
+                    <tr class="clickable" onclick="showDetail('project')"><td>Menu boards & exterior</td><td>GreenLeaf Restaurant</td><td>30%</td><td>KES 0</td><td><span class="status-badge status-active">Active</span></td></tr>
+                    <tr class="clickable" onclick="showDetail('project')"><td>Office wayfinding</td><td>Apex Holdings</td><td>95%</td><td>-KES 4,500</td><td><span class="status-badge status-completed">Completed</span></td></tr>
+                    <tr class="clickable" onclick="showDetail('project')"><td>Retail store signage</td><td>Fashion Hub Ltd</td><td>45%</td><td>+KES 2,100</td><td><span class="status-badge status-active">Active</span></td></tr></tbody></table></div></div>`,
+            quotes: `<div class="page-header"><h2 class="page-title">Quotes</h2><p class="page-subtitle">Manage all quotations</p></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">All Quotes</div><div><button class="btn btn-secondary">Filter</button><button class="btn btn-primary" onclick="openModal('new-quote-modal')">+ New Quote</button></div></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Quote #</th><th>Client</th><th>Title</th><th>Created</th><th>Valid Until</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-001</td><td>Acme Creative Studio</td><td>Reception feature wall</td><td>Jul 15, 2026</td><td>Aug 11, 2026</td><td>KES 53,300</td><td><span class="status-badge status-published">Published</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-002</td><td>TechCorp Kenya</td><td>Office signage package</td><td>Jul 18, 2026</td><td>Aug 15, 2026</td><td>KES 125,000</td><td><span class="status-badge status-draft">Draft</span></td><td><button class="action-btn action-btn-edit">Edit</button><button class="action-btn action-btn-delete">Delete</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-003</td><td>GreenLeaf Restaurant</td><td>Menu boards & exterior</td><td>Jul 10, 2026</td><td>Aug 05, 2026</td><td>KES 78,500</td><td><span class="status-badge status-accepted">Accepted</span></td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-004</td><td>Safari Ventures</td><td>Lodge directional signage</td><td>Jul 20, 2026</td><td>Aug 20, 2026</td><td>KES 245,000</td><td><span class="status-badge status-rejected">Rejected</span></td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-005</td><td>Apex Holdings</td><td>Office wayfinding system</td><td>Jul 12, 2026</td><td>Aug 12, 2026</td><td>KES 180,000</td><td><span class="status-badge status-published">Published</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-006</td><td>Fashion Hub Ltd</td><td>Retail store signage</td><td>Jul 22, 2026</td><td>Aug 22, 2026</td><td>KES 95,000</td><td><span class="status-badge status-draft">Draft</span></td><td><button class="action-btn action-btn-edit">Edit</button><button class="action-btn action-btn-delete">Delete</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-007</td><td>Metro Hospital</td><td>Departmental signage</td><td>Jul 08, 2026</td><td>Aug 08, 2026</td><td>KES 320,000</td><td><span class="status-badge status-accepted">Accepted</span></td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-008</td><td>EduTech Academy</td><td>Campus directional signs</td><td>Jul 25, 2026</td><td>Aug 25, 2026</td><td>KES 410,000</td><td><span class="status-badge status-draft">Draft</span></td><td><button class="action-btn action-btn-edit">Edit</button><button class="action-btn action-btn-delete">Delete</button></td></tr></tbody></table></div></div>`,
+            projects: `<div class="page-header"><h2 class="page-title">Projects</h2><p class="page-subtitle">Track project costs and variance</p></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">All Projects</div><button class="btn btn-primary">+ New Project</button></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Project</th><th>Client</th><th>Quote Reference</th><th>Start Date</th><th>Target End</th><th>Quoted</th><th>Actual</th><th>Variance</th><th>Status</th></tr></thead>
+                    <tbody><tr class="clickable" onclick="showDetail('project')"><td>Reception feature wall</td><td>Acme Creative Studio</td><td>QT-2026-001</td><td>Aug 01, 2026</td><td>Aug 10, 2026</td><td>KES 53,300</td><td>KES 49,850</td><td style="color:#27ae60;">-KES 3,450</td><td><span class="status-badge status-active">Active</span></td></tr>
+                    <tr class="clickable" onclick="showDetail('project')"><td>Menu boards & exterior</td><td>GreenLeaf Restaurant</td><td>QT-2026-003</td><td>Aug 05, 2026</td><td>Aug 15, 2026</td><td>KES 78,500</td><td>KES 78,500</td><td>KES 0</td><td><span class="status-badge status-active">Active</span></td></tr>
+                    <tr class="clickable" onclick="showDetail('project')"><td>Office wayfinding</td><td>Apex Holdings</td><td>QT-2025-045</td><td>Jun 01, 2026</td><td>Jun 30, 2026</td><td>KES 180,000</td><td>KES 175,500</td><td style="color:#27ae60;">-KES 4,500</td><td><span class="status-badge status-completed">Completed</span></td></tr>
+                    <tr class="clickable" onclick="showDetail('project')"><td>Retail store signage</td><td>Fashion Hub Ltd</td><td>QT-2026-006</td><td>Jul 25, 2026</td><td>Aug 05, 2026</td><td>KES 95,000</td><td>KES 97,100</td><td style="color:#e74c3c;">+KES 2,100</td><td><span class="status-badge status-active">Active</span></td></tr>
+                    <tr class="clickable" onclick="showDetail('project')"><td>Departmental signage</td><td>Metro Hospital</td><td>QT-2026-007</td><td>Aug 10, 2026</td><td>Aug 25, 2026</td><td>KES 320,000</td><td>KES 0</td><td>KES 0</td><td><span class="status-badge status-draft">Not Started</span></td></tr></tbody></table></div></div>`,
+            clients: `<div class="page-header"><h2 class="page-title">Clients</h2><p class="page-subtitle">Manage client organizations</p></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">All Clients</div><button class="btn btn-primary">+ Add Client</button></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Client Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>Active Quotes</th><th>Active Projects</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr><td>Acme Creative Studio</td><td>Jane Wanjiku</td><td>jane@acme.example</td><td>+254712345678</td><td>1</td><td>1</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>TechCorp Kenya</td><td>John Kimani</td><td>john@techcorp.example</td><td>+254723456789</td><td>1</td><td>0</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>GreenLeaf Restaurant</td><td>Mary Ochieng</td><td>mary@greenleaf.example</td><td>+254734567890</td><td>0</td><td>1</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>Safari Ventures</td><td>David Kamau</td><td>david@safari.example</td><td>+254745678901</td><td>0</td><td>0</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>Apex Holdings</td><td>Susan Njoroge</td><td>susan@apex.example</td><td>+254756789012</td><td>0</td><td>1</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>Fashion Hub Ltd</td><td>Peter Omondi</td><td>peter@fashionhub.example</td><td>+254767890123</td><td>1</td><td>1</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>Metro Hospital</td><td>Dr. Grace Kiplagat</td><td>grace@metrohospital.example</td><td>+254778901234</td><td>0</td><td>0</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>EduTech Academy</td><td>James Mwangi</td><td>james@edutech.example</td><td>+254789012345</td><td>1</td><td>0</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr></tbody></table></div></div>`,
+            suppliers: `<div class="page-header"><h2 class="page-title">Suppliers</h2><p class="page-subtitle">Manage supplier information and performance</p></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">All Suppliers</div><button class="btn btn-primary">+ Add Supplier</button></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Supplier Name</th><th>Contact</th><th>Email</th><th>Lead Time</th><th>On-Time Rate</th><th>Quality Score</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr><td>ABC Signs</td><td>John Smith</td><td>john@abcsigns.example</td><td>5 days</td><td>92%</td><td>4.5/5</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>XYZ Metal Works</td><td>Sarah Jones</td><td>sarah@xyzmetal.example</td><td>7 days</td><td>85%</td><td>4.0/5</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>LED Solutions Ltd</td><td>Michael Brown</td><td>michael@ledsolutions.example</td><td>3 days</td><td>98%</td><td>4.8/5</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>Acrylic Masters</td><td>Linda Mwangi</td><td>linda@acrylicmasters.example</td><td>4 days</td><td>88%</td><td>4.2/5</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>PrintPro Graphics</td><td>Robert Ochieng</td><td>robert@printpro.example</td><td>2 days</td><td>95%</td><td>4.6/5</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>Steel Fabricators KE</td><td>James Kipchoge</td><td>james@steelfab.example</td><td>10 days</td><td>78%</td><td>3.8/5</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr></tbody></table></div></div>`,
+            products: `<div class="page-header"><h2 class="page-title">Products</h2><p class="page-subtitle">Product catalog and supplier offers</p></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Product Catalog</div><button class="btn btn-primary">+ Add Product</button></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>SKU</th><th>Product Name</th><th>Category</th><th>Unit</th><th>Active Offers</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr><td>SIGN-001</td><td>Custom illuminated logo signage</td><td>Signage</td><td>each</td><td>3</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>PANEL-002</td><td>Aluminium composite panel</td><td>Materials</td><td>m2</td><td>2</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>LED-003</td><td>LED strip lighting</td><td>Lighting</td><td>meter</td><td>1</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>ACRYL-004</td><td>Clear acrylic sheet</td><td>Materials</td><td>m2</td><td>2</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>LETTER-005</td><td>3D acrylic lettering</td><td>Signage</td><td>each</td><td>3</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>STEEL-006</td><td>Steel frame fabrication</td><td>Materials</td><td>kg</td><td>1</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>PRINT-007</td><td>Vinyl printing</td><td>Printing</td><td>m2</td><td>2</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>INSTALL-008</td><td>Installation labour</td><td>Services</td><td>hour</td><td>1</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr></tbody></table></div></div>`,
+            reports: `<div class="page-header"><h2 class="page-title">Reports</h2><p class="page-subtitle">Analytics and reporting</p></div>
+                <div class="dashboard-grid" style="margin-bottom:25px;"><div class="stat-card"><div class="label">Total Quotes (YTD)</div><div class="value">47</div><div class="change positive">+12% vs last year</div></div>
+                <div class="stat-card"><div class="label">Acceptance Rate</div><div class="value">68%</div><div class="change positive">+5% improvement</div></div>
+                <div class="stat-card"><div class="label">Avg Quote Value</div><div class="value">KES 142,000</div><div class="change positive">+8% increase</div></div>
+                <div class="stat-card"><div class="label">Gross Margin</div><div class="value">18.5%</div><div class="change negative">-2% vs target</div></div></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Quote Performance by Month</div></div>
+                    <div class="section-content" style="padding:20px;">
+                        <div style="display:flex;align-items:flex-end;gap:15px;height:150px;margin-bottom:10px;">
+                            <div style="flex:1;background:#e94560;height:60%;border-radius:4px 4px 0 0;position:relative;"><span style="position:absolute;bottom:-25px;left:0;right:0;text-align:center;font-size:11px;">Jan</span><span style="position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;">3</span></div>
+                            <div style="flex:1;background:#e94560;height:80%;border-radius:4px 4px 0 0;position:relative;"><span style="position:absolute;bottom:-25px;left:0;right:0;text-align:center;font-size:11px;">Feb</span><span style="position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;">4</span></div>
+                            <div style="flex:1;background:#e94560;height:50%;border-radius:4px 4px 0 0;position:relative;"><span style="position:absolute;bottom:-25px;left:0;right:0;text-align:center;font-size:11px;">Mar</span><span style="position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;">2</span></div>
+                            <div style="flex:1;background:#e94560;height:90%;border-radius:4px 4px 0 0;position:relative;"><span style="position:absolute;bottom:-25px;left:0;right:0;text-align:center;font-size:11px;">Apr</span><span style="position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;">5</span></div>
+                            <div style="flex:1;background:#e94560;height:70%;border-radius:4px 4px 0 0;position:relative;"><span style="position:absolute;bottom:-25px;left:0;right:0;text-align:center;font-size:11px;">May</span><span style="position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;">3</span></div>
+                            <div style="flex:1;background:#e94560;height:100%;border-radius:4px 4px 0 0;position:relative;"><span style="position:absolute;bottom:-25px;left:0;right:0;text-align:center;font-size:11px;">Jun</span><span style="position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;">6</span></div>
+                            <div style="flex:1;background:#0f3460;height:40%;border-radius:4px 4px 0 0;position:relative;"><span style="position:absolute;bottom:-25px;left:0;right:0;text-align:center;font-size:11px;">Jul</span><span style="position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;">2</span></div>
+                        </div>
+                        <div style="font-size:12px;color:#666;text-align:center;">Quotes created per month (2026)</div>
+                    </div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;">
+                    <div class="section-card"><div class="section-header"><div class="section-title">Project Variance Summary</div></div>
+                        <div class="section-content" style="padding:20px;">
+                            <div style="margin-bottom:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>Under Budget</span><span style="color:#27ae60;font-weight:600;">8 projects</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:8px;"><div style="background:#27ae60;width:67%;height:100%;border-radius:4px;"></div></div></div>
+                            <div style="margin-bottom:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>On Budget</span><span style="color:#666;font-weight:600;">3 projects</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:8px;"><div style="background:#666;width:25%;height:100%;border-radius:4px;"></div></div></div>
+                            <div><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>Over Budget</span><span style="color:#e74c3c;font-weight:600;">1 project</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:8px;"><div style="background:#e74c3c;width:8%;height:100%;border-radius:4px;"></div></div></div>
+                        </div></div>
+                    <div class="section-card"><div class="section-header"><div class="section-title">Top Suppliers by Volume</div></div>
+                        <div class="section-content" style="padding:20px;">
+                            <div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span>LED Solutions Ltd</span><span>KES 450,000</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:6px;"><div style="background:#e94560;width:90%;height:100%;border-radius:4px;"></div></div></div>
+                            <div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span>ABC Signs</span><span>KES 380,000</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:6px;"><div style="background:#e94560;width:76%;height:100%;border-radius:4px;"></div></div></div>
+                            <div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span>Acrylic Masters</span><span>KES 320,000</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:6px;"><div style="background:#e94560;width:64%;height:100%;border-radius:4px;"></div></div></div>
+                            <div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span>PrintPro Graphics</span><span>KES 280,000</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:6px;"><div style="background:#e94560;width:56%;height:100%;border-radius:4px;"></div></div></div>
+                            <div><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span>XYZ Metal Works</span><span>KES 220,000</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:6px;"><div style="background:#e94560;width:44%;height:100%;border-radius:4px;"></div></div></div>
+                        </div></div>
+                </div>`,
+            'settings-users': `<div class="page-header"><h2 class="page-title">Settings - Users</h2><p class="page-subtitle">Manage workspace users and roles</p></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Workspace Users</div><button class="btn btn-primary">+ Invite User</button></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Roles</th><th>Permissions</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr><td>Jane Doe</td><td>jane@joscards.example</td><td>Estimator</td><td>Create/Edit Quotes, View Projects</td><td>2 hours ago</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>John Smith</td><td>john@joscards.example</td><td>Procurement, PM</td><td>Manage Suppliers, Manage Projects, Cost Events</td><td>1 day ago</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>Mary Johnson</td><td>mary@joscards.example</td><td>Admin</td><td>Full Access (All permissions)</td><td>3 hours ago</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>David Kimani</td><td>david@joscards.example</td><td>Estimator</td><td>Create/Edit Quotes, View Projects</td><td>5 days ago</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>Sarah Ochieng</td><td>sarah@joscards.example</td><td>Viewer</td><td>View Only (Read access)</td><td>1 week ago</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-edit">Edit</button></td></tr>
+                    <tr><td>Robert Ochieng</td><td>robert@joscards.example</td><td>Finance</td><td>View Reports, Approve Quotes</td><td>2 days ago</td><td><span class="status-badge status-active">Active</span></td><td><button class="action-btn action-btn-edit">Edit</button></td></tr></tbody></table></div></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Role Definitions</div></div>
+                    <div class="section-content" style="padding:20px;">
+                        <div style="margin-bottom:15px;"><strong>Admin</strong> - Full system access including user management, settings, and all data operations.</div>
+                        <div style="margin-bottom:15px;"><strong>Estimator</strong> - Create and edit quotes, view projects, manage quote items and pricing.</div>
+                        <div style="margin-bottom:15px;"><strong>Procurement</strong> - Manage suppliers, view supplier offers, manage cost events.</div>
+                        <div style="margin-bottom:15px;"><strong>PM (Project Manager)</strong> - Manage projects, track milestones, add cost events, view project reports.</div>
+                        <div style="margin-bottom:15px;"><strong>Finance</strong> - View financial reports, approve quotes, access cost variance data.</div>
+                        <div><strong>Viewer</strong> - Read-only access to quotes, projects, and reports. No editing permissions.</div>
+                    </div></div>`,
+            'settings-templates': `<div class="page-header"><h2 class="page-title">Settings - Templates</h2><p class="page-subtitle">Form and output templates</p></div>
+                <div class="tabs"><div class="tab active">Form Templates</div><div class="tab">Output Templates</div></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Form Templates</div><button class="btn btn-primary">+ New Template</button></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Template Name</th><th>Target Entity</th><th>Current Version</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr><td>Quote Intake Form</td><td>Quote</td><td>v3</td><td><span class="status-badge status-published">Published</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Edit</button></td></tr></tbody></table></div></div>`,
+            'settings-audit': `<div class="page-header"><h2 class="page-title">Settings - Audit Log</h2><p class="page-subtitle">System audit trail</p></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Recent Audit Events</div><button class="btn btn-secondary">Export</button></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Timestamp</th><th>Actor</th><th>Action</th><th>Resource</th><th>Details</th></tr></thead>
+                    <tbody><tr><td>Jul 23, 2026 14:32</td><td>Jane Doe</td><td>quote.published</td><td>QT-2026-001</td><td>Published revision v2</td></tr>
+                    <tr><td>Jul 23, 2026 14:15</td><td>John Smith</td><td>cost_event.created</td><td>PRJ-001</td><td>Added actual cost event</td></tr>
+                    <tr><td>Jul 23, 2026 13:45</td><td>System</td><td>document.generated</td><td>QT-2026-001</td><td>Generated PDF document</td></tr>
+                    <tr><td>Jul 23, 2026 12:30</td><td>Mary Johnson</td><td>user.invited</td><td>sarah@joscards.example</td><td>Invited user as Viewer</td></tr>
+                    <tr><td>Jul 23, 2026 11:20</td><td>Jane Doe</td><td>quote.created</td><td>QT-2026-008</td><td>Created new quote</td></tr>
+                    <tr><td>Jul 22, 2026 16:50</td><td>John Smith</td><td>supplier.updated</td><td>ABC Signs</td><td>Updated lead time to 5 days</td></tr>
+                    <tr><td>Jul 22, 2026 15:30</td><td>Jane Doe</td><td>quote.accepted</td><td>QT-2026-003</td><td>Quote accepted by client</td></tr>
+                    <tr><td>Jul 22, 2026 14:10</td><td>System</td><td>notification.sent</td><td>QT-2026-001</td><td>SMS notification sent to client</td></tr>
+                    <tr><td>Jul 22, 2026 10:00</td><td>John Smith</td><td>project.created</td><td>PRJ-004</td><td>Created project from QT-2026-006</td></tr>
+                    <tr><td>Jul 21, 2026 17:45</td><td>Mary Johnson</td><td>template.published</td><td>Quote Intake Form</td><td>Published v3 of template</td></tr></tbody></table></div></div>`,
+            'client-portal': `<div class="client-hero"><h1>Welcome, Acme Creative Studio</h1><p>View your quotes, track projects, and communicate with our team.</p></div>
+                <div class="dashboard-grid" style="margin-top:25px;"><div class="stat-card"><div class="label">Active Projects</div><div class="value">1</div></div>
+                <div class="stat-card"><div class="label">New Quotes</div><div class="value">1</div></div>
+                <div class="stat-card"><div class="label">Pending Decisions</div><div class="value">1</div></div>
+                <div class="stat-card"><div class="label">Total Spent YTD</div><div class="value">KES 180,000</div></div></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Your Quotes</div></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Quote #</th><th>Title</th><th>Valid Until</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr class="clickable" onclick="showDetail('quote')"><td>QT-2026-001</td><td>Reception feature wall</td><td>Aug 11, 2026</td><td>KES 53,300</td><td><span class="status-badge status-published">Awaiting Decision</span></td><td><button class="action-btn action-btn-view">View</button><button class="action-btn action-btn-edit">Accept</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2025-045</td><td>Office wayfinding system</td><td>Jun 30, 2026</td><td>KES 180,000</td><td><span class="status-badge status-accepted">Accepted</span></td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('quote')"><td>QT-2025-038</td><td>Branding package</td><td>Mar 15, 2026</td><td>KES 45,000</td><td><span class="status-badge status-completed">Completed</span></td><td><button class="action-btn action-btn-view">View</button></td></tr></tbody></table></div></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Your Projects</div></div>
+                    <div class="section-content"><table class="data-table"><thead><tr><th>Project</th><th>Progress</th><th>Target End</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody><tr class="clickable" onclick="showDetail('project')"><td>Reception feature wall</td><td>65%</td><td>Aug 10, 2026</td><td><span class="status-badge status-active">In Progress</span></td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                    <tr class="clickable" onclick="showDetail('project')"><td>Office wayfinding</td><td>100%</td><td>Jun 30, 2026</td><td><span class="status-badge status-completed">Completed</span></td><td><button class="action-btn action-btn-view">View</button></td></tr></tbody></table></div></div>
+                <div class="section-card"><div class="section-header"><div class="section-title">Messages</div></div>
+                    <div class="section-content" style="padding:20px;">
+                        <div style="padding:15px;background:#f8f9fa;border-radius:6px;margin-bottom:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-weight:500;">Joscards Team</span><span style="font-size:12px;color:#666;">Jul 23, 2026</span></div>
+                        <div style="font-size:14px;color:#666;">Your quote QT-2026-001 has been updated with revised pricing. Please review at your earliest convenience.</div></div>
+                        <div style="padding:15px;background:#f8f9fa;border-radius:6px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-weight:500;">Joscards Team</span><span style="font-size:12px;color:#666;">Jul 20, 2026</span></div>
+                        <div style="font-size:14px;color:#666;">Project PRJ-001 has entered Phase 3: Fabrication. Expected completion by Aug 5, 2026.</div></div>
+                    </div></div>`
+        };
+        const details = {
+            quote: `<div class="page-header"><h2 class="page-title">QT-2026-001 - Reception feature wall</h2></div>
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:25px;">
+                    <div class="section-card"><div class="section-header"><div class="section-title">Quote Structure</div><button class="btn btn-secondary" onclick="openModal('item-detail-modal')">+ Add Item</button></div>
+                        <div class="section-content" style="padding:20px;">
+                            <div style="padding:10px;border:1px solid #eee;border-radius:6px;margin-bottom:8px;border-left:3px solid #e94560;background:#f8f9fa;cursor:pointer;" onclick="openModal('item-detail-modal')"><div style="display:flex;justify-content:space-between;"><span>1. Section: Signage</span><span style="font-weight:600;">KES 19,300</span></div></div>
+                            <div style="padding:10px;border:1px solid #eee;border-radius:6px;margin-bottom:8px;margin-left:20px;border-left:3px solid #0f3460;cursor:pointer;" onclick="openModal('item-detail-modal')"><div style="display:flex;justify-content:space-between;"><span>1.1 Subsection: Illuminated</span><span style="font-weight:600;">KES 19,300</span></div></div>
+                            <div style="padding:10px;border:1px solid #eee;border-radius:6px;margin-bottom:8px;margin-left:40px;cursor:pointer;" onclick="openModal('item-detail-modal')"><div style="display:flex;justify-content:space-between;"><span>1.1.1 Custom illuminated logo signage</span><span style="font-weight:600;">KES 12,500</span></div></div>
+                            <div style="padding:10px;border:1px solid #eee;border-radius:6px;margin-bottom:8px;margin-left:40px;cursor:pointer;" onclick="openModal('item-detail-modal')"><div style="display:flex;justify-content:space-between;"><span>1.1.2 3D acrylic lettering</span><span style="font-weight:600;">KES 6,800</span></div></div>
+                            <div style="padding:10px;border:1px solid #eee;border-radius:6px;margin-bottom:8px;border-left:3px solid #e94560;background:#f8f9fa;cursor:pointer;" onclick="openModal('item-detail-modal')"><div style="display:flex;justify-content:space-between;"><span>2. Section: Installation</span><span style="font-weight:600;">KES 34,000</span></div></div>
+                            <div style="padding:10px;border:1px solid #eee;border-radius:6px;margin-bottom:8px;margin-left:20px;cursor:pointer;" onclick="openModal('item-detail-modal')"><div style="display:flex;justify-content:space-between;"><span>2.1 Installation labour</span><span style="font-weight:600;">KES 34,000</span></div></div>
+                            <div style="margin-top:30px;padding-top:20px;border-top:2px solid #eee;">
+                                <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:150px;color:#666;">Subtotal</span><span style="flex:1;font-weight:500;">KES 53,300</span></div>
+                                <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:150px;color:#666;">Tax (16%)</span><span style="flex:1;font-weight:500;">KES 8,528</span></div>
+                                <div style="display:flex;padding:10px 0;"><span style="width:150px;font-weight:600;">Total</span><span style="flex:1;font-weight:600;font-size:18px;">KES 61,828</span></div>
+                            </div>
+                        </div></div>
+                    <div class="section-card"><div class="section-header"><div class="section-title">Quote Details</div></div>
+                        <div class="section-content" style="padding:20px;">
+                            <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Client</span><span style="flex:1;font-weight:500;">Acme Creative Studio</span></div>
+                            <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Contact</span><span style="flex:1;font-weight:500;">Jane Wanjiku</span></div>
+                            <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Status</span><span style="flex:1;"><span class="status-badge status-published">Published</span></span></div>
+                            <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Currency</span><span style="flex:1;font-weight:500;">KES</span></div>
+                            <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Valid Until</span><span style="flex:1;font-weight:500;">Aug 11, 2026</span></div>
+                            <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Created</span><span style="flex:1;font-weight:500;">Jul 15, 2026</span></div>
+                            <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Created By</span><span style="flex:1;font-weight:500;">Jane Doe</span></div>
+                            <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Template</span><span style="flex:1;font-weight:500;">Standard Quote v3</span></div>
+                            <div style="display:flex;padding:10px 0;"><span style="width:120px;color:#666;">Revision</span><span style="flex:1;font-weight:500;">v2 (current)</span></div>
+                            <div style="margin-top:20px;">
+                                <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="openModal('send-quote-modal')">Generate PDF & Send</button>
+                                <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="openModal('revision-history-modal')">View Revision History</button>
+                                <button class="btn btn-secondary" style="width:100%;">Create New Revision</button>
+                            </div>
+                        </div></div>
+                </div>
+                <button class="btn btn-secondary" onclick="showPage('quotes')">← Back to Quotes</button>`,
+            project: `<div class="page-header"><h2 class="page-title">PRJ-001 - Reception feature wall</h2></div>
+                <div class="dashboard-grid" style="margin-bottom:25px;">
+                    <div class="stat-card"><div class="label">Quoted Total</div><div class="value">KES 53,300</div></div>
+                    <div class="stat-card"><div class="label">Actual Total</div><div class="value">KES 49,850</div></div>
+                    <div class="stat-card"><div class="label">Variance</div><div class="value" style="color:#27ae60;">-KES 3,450</div></div>
+                    <div class="stat-card"><div class="label">Gross Profit</div><div class="value" style="color:#27ae60;">KES 3,450</div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:25px;">
+                    <div>
+                        <div class="section-card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">Project Phases</div></div>
+                            <div class="section-content" style="padding:20px;">
+                                <div style="margin-bottom:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-weight:500;">Phase 1: Design & Approval</span><span style="color:#27ae60;">✓ Completed</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:8px;"><div style="background:#27ae60;width:100%;height:100%;border-radius:4px;"></div></div>
+                                <div style="font-size:12px;color:#666;margin-top:3px;">Jul 15 - Jul 20, 2026</div></div>
+                                <div style="margin-bottom:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-weight:500;">Phase 2: Material Procurement</span><span style="color:#27ae60;">✓ Completed</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:8px;"><div style="background:#27ae60;width:100%;height:100%;border-radius:4px;"></div></div>
+                                <div style="font-size:12px;color:#666;margin-top:3px;">Jul 21 - Jul 28, 2026</div></div>
+                                <div style="margin-bottom:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-weight:500;">Phase 3: Fabrication</span><span style="color:#f57c00;">In Progress (80%)</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:8px;"><div style="background:#f57c00;width:80%;height:100%;border-radius:4px;"></div></div>
+                                <div style="font-size:12px;color:#666;margin-top:3px;">Jul 29 - Aug 05, 2026</div></div>
+                                <div style="margin-bottom:15px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-weight:500;">Phase 4: Installation</span><span style="color:#666;">Pending</span></div>
+                                <div style="background:#e9ecef;border-radius:4px;height:8px;"><div style="background:#666;width:0%;height:100%;border-radius:4px;"></div></div>
+                                <div style="font-size:12px;color:#666;margin-top:3px;">Aug 06 - Aug 10, 2026</div></div>
+                            </div></div>
+                        <div class="section-card"><div class="section-header"><div class="section-title">Cost Events</div><button class="btn btn-primary" onclick="openModal('cost-event-modal')">+ Add Cost Event</button></div>
+                            <div class="section-content"><table class="data-table"><thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Supplier</th><th>Amount</th><th>Actions</th></tr></thead>
+                            <tbody><tr><td>Jul 20, 2026</td><td><span class="status-badge status-active">Actual</span></td><td>Invoice for composite panels</td><td>ABC Signs</td><td>KES 11,400</td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                            <tr><td>Jul 18, 2026</td><td><span class="status-badge status-draft">Substitution</span></td><td>Changed supplier for LED lighting</td><td>LED Solutions Ltd</td><td>KES 10,500</td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                            <tr><td>Jul 15, 2026</td><td><span class="status-badge status-completed">Actual</span></td><td>Custom illuminated logo</td><td>ABC Signs</td><td>KES 10,500</td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                            <tr><td>Jul 12, 2026</td><td><span class="status-badge status-completed">Actual</span></td><td>3D acrylic lettering</td><td>Acrylic Masters</td><td>KES 5,600</td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                            <tr><td>Jul 10, 2026</td><td><span class="status-badge status-completed">Actual</span></td><td>Installation labour payment</td><td>Internal</td><td>KES 12,350</td><td><button class="action-btn action-btn-view">View</button></td></tr></tbody></table></div></div>
+                    </div>
+                    <div>
+                        <div class="section-card" style="margin-bottom:20px;"><div class="section-header"><div class="section-title">Milestones</div></div>
+                            <div class="section-content" style="padding:20px;">
+                                <div style="padding:10px 0;border-bottom:1px solid #eee;"><div style="display:flex;align-items:center;gap:8px;"><span style="color:#27ae60;">✓</span><span style="font-weight:500;">Design approved</span></div><div style="font-size:12px;color:#666;margin-left:20px;">Jul 20, 2026</div></div>
+                                <div style="padding:10px 0;border-bottom:1px solid #eee;"><div style="display:flex;align-items:center;gap:8px;"><span style="color:#27ae60;">✓</span><span style="font-weight:500;">Materials ordered</span></div><div style="font-size:12px;color:#666;margin-left:20px;">Jul 28, 2026</div></div>
+                                <div style="padding:10px 0;border-bottom:1px solid #eee;"><div style="display:flex;align-items:center;gap:8px;"><span style="color:#f57c00;">○</span><span style="font-weight:500;">Fabrication complete</span></div><div style="font-size:12px;color:#666;margin-left:20px;">Due: Aug 05, 2026</div></div>
+                                <div style="padding:10px 0;"><div style="display:flex;align-items:center;gap:8px;"><span style="color:#666;">○</span><span style="font-weight:500;">Installation complete</span></div><div style="font-size:12px;color:#666;margin-left:20px;">Due: Aug 10, 2026</div></div>
+                            </div></div>
+                        <div class="section-card"><div class="section-header"><div class="section-title">Project Details</div></div>
+                            <div class="section-content" style="padding:20px;">
+                                <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Client</span><span style="flex:1;font-weight:500;">Acme Creative Studio</span></div>
+                                <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Quote Ref</span><span style="flex:1;font-weight:500;">QT-2026-001</span></div>
+                                <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Status</span><span style="flex:1;"><span class="status-badge status-active">Active</span></span></div>
+                                <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Start Date</span><span style="flex:1;font-weight:500;">Aug 01, 2026</span></div>
+                                <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Target End</span><span style="flex:1;font-weight:500;">Aug 10, 2026</span></div>
+                                <div style="display:flex;padding:10px 0;border-bottom:1px solid #eee;"><span style="width:120px;color:#666;">Progress</span><span style="flex:1;font-weight:500;">65%</span></div>
+                                <div style="display:flex;padding:10px 0;"><span style="width:120px;color:#666;">PM</span><span style="flex:1;font-weight:500;">John Smith</span></div>
+                            </div></div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="showPage('projects')">← Back to Projects</button>`
+        };
+        const modals = {
+            'new-quote-modal': `<div class="modal-overlay"><div class="modal"><div class="modal-header"><div class="modal-title">Create New Quote</div><button class="modal-close" onclick="closeModal()">×</button></div>
+                <div class="modal-body"><div class="form-group"><label class="form-label">Client</label><select class="form-select"><option>Select a client...</option><option>Acme Creative Studio</option><option>TechCorp Kenya</option><option>GreenLeaf Restaurant</option><option>Apex Holdings</option><option>Fashion Hub Ltd</option></select></div>
+                <div class="form-group"><label class="form-label">Quote Title</label><input type="text" class="form-input" placeholder="Enter quote title"></div>
+                <div class="form-group"><label class="form-label">Template</label><select class="form-select"><option>Standard Quote v3</option><option>Simple Quote v1</option><option>Detailed Quote v2</option></select></div>
+                <div class="form-group"><label class="form-label">Currency</label><select class="form-select"><option>KES - Kenyan Shilling</option><option>USD - US Dollar</option><option>EUR - Euro</option></select></div>
+                <div class="form-group"><label class="form-label">Valid Until</label><input type="date" class="form-input"></div></div>
+                <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal()">Create Quote</button></div></div></div>`,
+            'item-detail-modal': `<div class="modal-overlay"><div class="modal" style="max-width:700px;"><div class="modal-header"><div class="modal-title">Item Details</div><button class="modal-close" onclick="closeModal()">×</button></div>
+                <div class="modal-body"><div class="form-group"><label class="form-label">Description</label><input type="text" class="form-input" value="Custom illuminated logo signage" readonly></div>
+                <div class="form-group"><label class="form-label">Quantity</label><input type="number" class="form-input" value="1" readonly></div>
+                <div class="form-group"><label class="form-label">Unit</label><input type="text" class="form-input" value="each" readonly></div>
+                <div class="form-group"><label class="form-label">Supplier Offers</label><select class="form-select"><option>ABC Signs - KES 10,500 (5 days, 92% on-time)</option><option>XYZ Metal - KES 11,000 (2 days, 85% on-time)</option><option>LED Solutions - KES 10,200 (3 days, 98% on-time) ⭐ Best Value</option><option>Acrylic Masters - KES 10,800 (4 days, 88% on-time)</option></select></div>
+                <div class="form-group"><label class="form-label">Cost Snapshot</label><input type="text" class="form-input" value="KES 10,500" readonly></div>
+                <div class="form-group"><label class="form-label">Pricing Rule</label><select class="form-select"><option>Percentage markup (19.05%)</option><option>Fixed markup (KES 2,000)</option><option>Margin target (30% gross margin)</option><option>Cost-plus (15% overhead + 10% profit)</option></select></div>
+                <div style="padding:15px;background:#f8f9fa;border-radius:6px;margin-bottom:15px;">
+                    <div style="display:flex;padding:5px 0;"><span style="width:150px;color:#666;">Cost</span><span style="flex:1;">KES 10,500</span></div>
+                    <div style="display:flex;padding:5px 0;"><span style="width:150px;color:#666;">Markup (19.05%)</span><span style="flex:1;">KES 2,000</span></div>
+                    <div style="display:flex;padding:5px 0;"><span style="width:150px;color:#666;">Sell Price</span><span style="flex:1;font-weight:600;">KES 12,500</span></div>
+                    <div style="display:flex;padding:5px 0;border-top:1px solid #ddd;margin-top:5px;"><span style="width:150px;color:#666;">Gross Margin</span><span style="flex:1;color:#27ae60;font-weight:600;">16.0%</span></div>
+                </div>
+                <div class="form-group"><label class="form-label">Override Reason</label><textarea class="form-textarea" placeholder="Enter reason for price override..."></textarea></div></div>
+                <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal()">Save Changes</button></div></div></div>`,
+            'send-quote-modal': `<div class="modal-overlay"><div class="modal"><div class="modal-header"><div class="modal-title">Generate PDF & Send</div><button class="modal-close" onclick="closeModal()">×</button></div>
+                <div class="modal-body"><div class="form-group"><label class="form-label">Output Template</label><select class="form-select"><option>Standard Quote PDF v3</option><option>Simple Quote PDF v1</option><option>Detailed Quote PDF v2</option></select></div>
+                <div class="form-group"><label class="form-label">Email Subject</label><input type="text" class="form-input" value="Quote QT-2026-001 - Reception feature wall"></div>
+                <div class="form-group"><label class="form-label">Email Message</label><textarea class="form-textarea">Please find attached the quotation for the reception feature wall project. Let us know if you have any questions.</textarea></div>
+                <div class="form-group"><label class="form-label"><input type="checkbox"> Send SMS notification to client</label></div>
+                <div class="form-group"><label class="form-label">SMS Message</label><textarea class="form-textarea" style="min-height:60px;">Your quote QT-2026-001 is ready for review. Total: KES 61,828. Valid until Aug 11, 2026.</textarea></div></div>
+                <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal()">Generate & Send</button></div></div></div>`,
+            'cost-event-modal': `<div class="modal-overlay"><div class="modal"><div class="modal-header"><div class="modal-title">Add Cost Event</div><button class="modal-close" onclick="closeModal()">×</button></div>
+                <div class="modal-body"><div class="form-group"><label class="form-label">Event Type</label><select class="form-select"><option>Actual Cost</option><option>Substitution</option><option>Addition</option></select></div>
+                <div class="form-group"><label class="form-label">Quote Item</label><select class="form-select"><option>Select quote item...</option><option>Custom illuminated logo signage</option><option>3D acrylic lettering</option><option>Installation labour</option></select></div>
+                <div class="form-group"><label class="form-label">Description</label><input type="text" class="form-input" placeholder="Enter description"></div>
+                <div class="form-group"><label class="form-label">Quantity</label><input type="number" class="form-input" placeholder="1"></div>
+                <div class="form-group"><label class="form-label">Unit Amount</label><input type="text" class="form-input" placeholder="KES 0.00"></div>
+                <div class="form-group"><label class="form-label">Supplier</label><select class="form-select"><option>Select supplier...</option><option>ABC Signs</option><option>XYZ Metal Works</option><option>LED Solutions Ltd</option><option>Acrylic Masters</option><option>Internal</option></select></div>
+                <div class="form-group"><label class="form-label">Invoice Reference</label><input type="text" class="form-input" placeholder="INV-XXX"></div>
+                <div class="form-group"><label class="form-label">Reason (for substitution/addition)</label><textarea class="form-textarea" placeholder="Enter reason..."></textarea></div></div>
+                <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal()">Add Cost Event</button></div></div></div>`,
+            'revision-history-modal': `<div class="modal-overlay"><div class="modal" style="max-width:800px;"><div class="modal-header"><div class="modal-title">Revision History - QT-2026-001</div><button class="modal-close" onclick="closeModal()">×</button></div>
+                <div class="modal-body"><table class="data-table"><thead><tr><th>Version</th><th>Date</th><th>Changed By</th><th>Changes</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody><tr><td>v2</td><td>Jul 20, 2026</td><td>Jane Doe</td><td>Updated LED supplier, adjusted pricing</td><td>KES 53,300</td><td><span class="status-badge status-published">Published</span></td><td><button class="action-btn action-btn-view">View</button></td></tr>
+                <tr><td>v1</td><td>Jul 15, 2026</td><td>Jane Doe</td><td>Initial quote creation</td><td>KES 58,200</td><td><span class="status-badge status-completed">Superseded</span></td><td><button class="action-btn action-btn-view">View</button></td></tr></tbody></table>
+                <div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:6px;">
+                    <h4 style="margin-bottom:10px;">Version Comparison (v1 → v2)</h4>
+                    <div style="display:flex;padding:8px 0;border-bottom:1px solid #eee;"><span style="width:200px;color:#666;">Custom illuminated logo</span><span style="flex:1;">KES 14,000 → KES 12,500</span><span style="color:#27ae60;">-KES 1,500</span></div>
+                    <div style="display:flex;padding:8px 0;border-bottom:1px solid #eee;"><span style="width:200px;color:#666;">3D acrylic lettering</span><span style="flex:1;">KES 7,200 → KES 6,800</span><span style="color:#27ae60;">-KES 400</span></div>
+                    <div style="display:flex;padding:8px 0;"><span style="width:200px;color:#666;">Installation labour</span><span style="flex:1;">KES 37,000 → KES 34,000</span><span style="color:#27ae60;">-KES 3,000</span></div>
+                </div></div>
+                <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div></div></div>`
+        };
+        function showPage(pageId) {
+            document.getElementById('content-area').innerHTML = pages[pageId] || '<p>Page not found</p>';
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event?.target?.closest('.nav-item')?.classList.add('active');
+            const app = document.getElementById('app');
+            if (pageId === 'client-portal') app.classList.add('client-portal');
+            else app.classList.remove('client-portal');
+        }
+        function showDetail(type) {
+            document.getElementById('content-area').innerHTML = details[type] || '<p>Detail not found</p>';
+        }
+        function openModal(modalId) {
+            document.getElementById('modal-container').innerHTML = modals[modalId] || '';
+            document.querySelector('.modal-overlay')?.classList.add('active');
+        }
+        function closeModal() {
+            document.querySelector('.modal-overlay')?.classList.remove('active');
+            setTimeout(() => document.getElementById('modal-container').innerHTML = '', 200);
+        }
+        showPage('dashboard');
+    </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+.theme-toggle {
+  padding: 8px 12px;
+  background-color: transparent;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background-color: #f0f0f0;
+  border-color: #ccc;
+}
+
+.theme-toggle:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] .theme-toggle {
+  border-color: #555;
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background-color: #333;
+  border-color: #666;
+}

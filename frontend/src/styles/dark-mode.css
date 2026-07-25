@@ -1,0 +1,301 @@
+/* Dark Mode Styles */
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3d3d3d;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #808080;
+  --border-color: #444444;
+  --accent-color: #4a9eff;
+  --success-color: #4ade80;
+  --warning-color: #fbbf24;
+  --error-color: #f87171;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Light Mode (default) */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+  --border-color: #dee2e6;
+  --accent-color: #007bff;
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --error-color: #dc3545;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Apply CSS variables to common elements */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Cards and containers */
+.card,
+.panel,
+.modal {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Headers */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  transition: color 0.3s;
+}
+
+/* Text elements */
+p, span, div {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-tertiary);
+}
+
+/* Links */
+a {
+  color: var(--accent-color);
+  transition: color 0.3s;
+}
+
+a:hover {
+  color: var(--accent-color);
+  opacity: 0.8;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-color);
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.btn-secondary:hover {
+  background-color: var(--border-color);
+}
+
+/* Form elements */
+input,
+textarea,
+select {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent-color);
+  outline-color: var(--accent-color);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Tables */
+table {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+th {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+td {
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* Navigation */
+.navbar,
+.header {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  transition: color 0.3s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--text-primary);
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Modals */
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Alerts and notifications */
+.alert {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+.alert-success {
+  background-color: rgba(74, 222, 128, 0.1);
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.alert-warning {
+  background-color: rgba(251, 191, 36, 0.1);
+  border-color: var(--warning-color);
+  color: var(--warning-color);
+}
+
+.alert-error {
+  background-color: rgba(248, 113, 113, 0.1);
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
+/* Badges */
+.badge {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.badge-primary {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+/* Progress bars */
+.progress-bar {
+  background-color: var(--bg-tertiary);
+  transition: background-color 0.3s;
+}
+
+.progress-fill {
+  background-color: var(--accent-color);
+  transition: background-color 0.3s;
+}
+
+/* Code blocks */
+code,
+pre {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+  transition: color 0.3s, background-color 0.3s;
+}
+
+.dropdown-item:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Tooltips */
+.tooltip {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color);
+}
+
+/* Responsive adjustments */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #3d3d3d;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-tertiary: #808080;
+    --border-color: #444444;
+    --accent-color: #4a9eff;
+    --success-color: #4ade80;
+    --warning-color: #fbbf24;
+    --error-color: #f87171;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+  }
+}

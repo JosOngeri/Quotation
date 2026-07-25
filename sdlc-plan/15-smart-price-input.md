@@ -1,0 +1,5 @@
+# 15. Smart Price Input
+
+On item entry, search normalized product/specification and show recent quote values plus currently valid supplier offers. Clearly label source, effective date, unit, currency, lead time, and confidence; selecting an offer writes a snapshot to the draft item. Fuzzy matching assists discovery but requires user confirmation.
+
+When no price exists, present an explicit empty state: save item as `price_status=missing`, add a supplier/offer via governed quick-entry dialog, or defer it. Publish blocks required missing prices; review shows a count and links to each unresolved item. A user may override price only with reason and appropriate role; high variance/old offers create review alerts. Bulk completion supports pasted/imported offers with validation and duplicate review. Track selections and subsequent actuals to improve recommendations without silently changing a quote.
