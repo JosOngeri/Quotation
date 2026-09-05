@@ -1,7 +1,7 @@
 -- Files table for storing uploaded file metadata
 CREATE TABLE IF NOT EXISTS files (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  workspace_id UUID NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   filename VARCHAR(255) NOT NULL,
   original_filename VARCHAR(255) NOT NULL,

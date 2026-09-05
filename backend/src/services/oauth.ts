@@ -68,10 +68,10 @@ export class OAuthService {
         userId: user.id,
         email: user.email,
         workspaceId: user.workspace_id,
-        roles: user.roles
+        roles: Array.isArray(user.roles) ? user.roles : String(user.roles || '').replace(/^\{|\}$/g, '').split(',').map(r => r.trim()).filter(Boolean)
       },
       env.JWT_SECRET as string,
-      { expiresIn: env.JWT_EXPIRES_IN as string }
+      { expiresIn: env.JWT_EXPIRES_IN as any }
     );
   }
 

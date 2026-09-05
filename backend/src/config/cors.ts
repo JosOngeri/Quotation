@@ -8,6 +8,9 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 export const corsOptions = {
   origin: (origin: string, callback: any) => {
     if (!origin) return callback(null, true);
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }

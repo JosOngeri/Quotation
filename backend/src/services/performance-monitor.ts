@@ -171,7 +171,7 @@ export const performanceMiddleware = (req: Request, res: Response, next: NextFun
 
   // Record the original end function
   const originalEnd = res.end;
-  res.end = function(this: Response, ...args: any[]) {
+  res.end = function(this: any, ...args: any[]): any {
     const responseTime = Date.now() - startTime;
     
     performanceMonitor.recordRequestMetric(req, res, responseTime);

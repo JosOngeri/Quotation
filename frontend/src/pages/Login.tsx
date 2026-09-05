@@ -1,17 +1,15 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { platformLoginSchema, tenantLoginSchema, clientLoginSchema } from '../lib/validation'
+import { loginSchema } from '../lib/validation'
 
 export default function Login() {
-  const [loginType, setLoginType] = useState<'tenant' | 'platform' | 'client'>('tenant')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [workspaceSlug, setWorkspaceSlug] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  
-  const { login, platformLogin, clientLogin } = useAuth()
+
+  const { login } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,33 +18,21 @@ export default function Login() {
     setLoading(true)
 
     try {
-      // Validate input based on login type
-      if (loginType === 'platform') {
-        const result = platformLoginSchema.safeParse({ email, password })
-        if (!result.success) {
-          setError(result.error.issues[0].message)
-          setLoading(false)
-          return
-        }
-        await platformLogin(email, password)
+      const result = loginSchema.safeParse({ email, password })
+      if (!result.success) {
+        setError(result.error.issues[0].message)
+        setLoading(false)
+        return
+      }
+
+      const user = await login(email, password)
+
+      // Route based on the user type returned by the backend
+      if (user.userType === 'platform_admin') {
         navigate('/platform-admin')
-      } else if (loginType === 'client') {
-        const result = clientLoginSchema.safeParse({ email, password })
-        if (!result.success) {
-          setError(result.error.issues[0].message)
-          setLoading(false)
-          return
-        }
-        await clientLogin(email, password)
+      } else if (user.userType === 'client_user') {
         navigate('/client-portal')
       } else {
-        const result = tenantLoginSchema.safeParse({ email, password, workspaceSlug })
-        if (!result.success) {
-          setError(result.error.issues[0].message)
-          setLoading(false)
-          return
-        }
-        await login(email, password, workspaceSlug)
         navigate('/dashboard')
       }
     } catch (err: any) {
@@ -64,64 +50,17 @@ export default function Login() {
           <p className="text-gray-600 mt-2">Quotation Management System</p>
         </div>
 
-        {/* Login type selector */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setLoginType('tenant')}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-              loginType === 'tenant' 
-                ? 'bg-primary-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Tenant
-          </button>
-          <button
-            onClick={() => setLoginType('platform')}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-              loginType === 'platform' 
-                ? 'bg-primary-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Platform Admin
-          </button>
-          <button
-            onClick={() => setLoginType('client')}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-              loginType === 'client' 
-                ? 'bg-primary-600 text-white' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Client Portal
-          </button>
-        </div>
-
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4" role="alert">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {loginType === 'tenant' && (
-            <div>
-              <label className="label">Workspace Slug</label>
-              <input
-                type="text"
-                value={workspaceSlug}
-                onChange={(e) => setWorkspaceSlug(e.target.value)}
-                className="input"
-                placeholder="e.g., joscards"
-                required
-              />
-            </div>
-          )}
-          
           <div>
-            <label className="label">Email</label>
+            <label htmlFor="login-email" className="label">Email</label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -132,8 +71,9 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="label">Password</label>
+            <label htmlFor="login-password" className="label">Password</label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -147,22 +87,23 @@ export default function Login() {
             type="submit"
             disabled={loading}
             className="btn btn-primary w-full"
+            aria-busy={loading}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
+        <div className="mt-4 text-center">
+          <Link to="/forgot-password" className="text-sm text-primary-600 hover:text-primary-800">
+            Forgot password?
+          </Link>
+        </div>
+
         <div className="mt-6 text-center text-sm text-gray-600">
           <p className="font-medium mb-2">Demo Credentials:</p>
-          {loginType === 'tenant' && (
-            <p className="text-xs">admin@joscards.example / Tenant@123 (workspace: joscards)</p>
-          )}
-          {loginType === 'platform' && (
-            <p className="text-xs">admin@qms.platform / Admin@123</p>
-          )}
-          {loginType === 'client' && (
-            <p className="text-xs">sarah@acme.example / Client@123</p>
-          )}
+          <p className="text-xs">admin@qms.platform / Admin@123</p>
+          <p className="text-xs">admin@joscards.example / Tenant@123</p>
+          <p className="text-xs">sarah@acme.example / Client@123</p>
         </div>
       </div>
     </div>

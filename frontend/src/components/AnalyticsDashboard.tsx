@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../lib/axios';
 
 interface AnalyticsSummary {
   total_quotes: number;
@@ -49,9 +49,9 @@ const AnalyticsDashboard: React.FC = () => {
       }
 
       const [summaryResponse, conversionResponse, winLossResponse] = await Promise.all([
-        axios.get('/api/v1/analytics/summary', { params }),
-        axios.get('/api/v1/analytics/conversion-rates', { params }),
-        axios.get('/api/v1/analytics/win-loss-ratios', { params })
+        api.get('/analytics/summary', { params }),
+        api.get('/analytics/conversion-rates', { params }),
+        api.get('/analytics/win-loss-ratios', { params })
       ]);
 
       setSummary(summaryResponse.data.data[0] || null);
@@ -78,7 +78,7 @@ const AnalyticsDashboard: React.FC = () => {
   const handleRunETL = async () => {
     setLoading(true);
     try {
-      await axios.post('/api/v1/analytics/run-etl');
+      await api.post('/analytics/run-etl');
       await fetchAnalyticsData();
     } catch (err: any) {
       setError(err.response?.data?.error?.message || 'Failed to run ETL pipeline');
@@ -88,27 +88,30 @@ const AnalyticsDashboard: React.FC = () => {
   };
 
   return (
-    <div className="analytics-dashboard">
-      <div className="dashboard-header">
-        <h2>Analytics Dashboard</h2>
-        <div className="dashboard-controls">
+    <div className="analytics-dashboard" aria-busy={loading}>
+      <div className="dashboard-header mb-4">
+        <div className="dashboard-controls flex flex-col md:flex-row gap-2 items-start md:items-center">
+          <label htmlFor="analytics-month" className="sr-only">Select month</label>
           <input
+            id="analytics-month"
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="month-selector"
+            className="month-selector input"
           />
           <button
             onClick={fetchAnalyticsData}
             disabled={loading}
-            className="refresh-btn"
+            className="refresh-btn btn btn-secondary"
+            aria-busy={loading}
           >
             Refresh
           </button>
           <button
             onClick={handleRunETL}
             disabled={loading}
-            className="etl-btn"
+            className="etl-btn btn btn-primary"
+            aria-busy={loading}
           >
             Run ETL
           </button>
@@ -116,7 +119,7 @@ const AnalyticsDashboard: React.FC = () => {
       </div>
 
       {error && (
-        <div className="error-message">
+        <div className="error-message p-4 bg-red-50 text-red-800 rounded mb-4" role="alert">
           {error}
         </div>
       )}
@@ -126,81 +129,81 @@ const AnalyticsDashboard: React.FC = () => {
       ) : (
         <>
           {summary && (
-            <div className="analytics-summary">
-              <h3>Summary Metrics</h3>
-              <div className="metrics-grid">
-                <div className="metric-card">
-                  <div className="metric-label">Total Quotes</div>
-                  <div className="metric-value">{summary.total_quotes}</div>
+            <div className="analytics-summary mb-6">
+              <h3 className="font-semibold mb-3">Summary Metrics</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="metric-card card p-4">
+                  <div className="metric-label text-sm text-gray-600">Total Quotes</div>
+                  <div className="metric-value text-2xl font-bold">{summary.total_quotes}</div>
                 </div>
-                <div className="metric-card">
-                  <div className="metric-label">Total Projects</div>
-                  <div className="metric-value">{summary.total_projects}</div>
+                <div className="metric-card card p-4">
+                  <div className="metric-label text-sm text-gray-600">Total Projects</div>
+                  <div className="metric-value text-2xl font-bold">{summary.total_projects}</div>
                 </div>
-                <div className="metric-card">
-                  <div className="metric-label">Total Revenue</div>
-                  <div className="metric-value">{formatCurrency(summary.total_revenue_minor)}</div>
+                <div className="metric-card card p-4">
+                  <div className="metric-label text-sm text-gray-600">Total Revenue</div>
+                  <div className="metric-value text-2xl font-bold">{formatCurrency(summary.total_revenue_minor)}</div>
                 </div>
-                <div className="metric-card">
-                  <div className="metric-label">Average Quote Value</div>
-                  <div className="metric-value">{formatCurrency(summary.average_quote_value_minor)}</div>
+                <div className="metric-card card p-4">
+                  <div className="metric-label text-sm text-gray-600">Average Quote Value</div>
+                  <div className="metric-value text-2xl font-bold">{formatCurrency(summary.average_quote_value_minor)}</div>
                 </div>
-                <div className="metric-card">
-                  <div className="metric-label">Conversion Rate</div>
-                  <div className="metric-value">{formatPercentage(summary.conversion_rate)}</div>
+                <div className="metric-card card p-4">
+                  <div className="metric-label text-sm text-gray-600">Conversion Rate</div>
+                  <div className="metric-value text-2xl font-bold">{formatPercentage(summary.conversion_rate)}</div>
                 </div>
-                <div className="metric-card">
-                  <div className="metric-label">Active Clients</div>
-                  <div className="metric-value">{summary.active_clients}</div>
+                <div className="metric-card card p-4">
+                  <div className="metric-label text-sm text-gray-600">Active Clients</div>
+                  <div className="metric-value text-2xl font-bold">{summary.active_clients}</div>
                 </div>
               </div>
             </div>
           )}
 
           {conversionRates && (
-            <div className="conversion-rates">
-              <h3>Conversion Rates</h3>
-              <div className="conversion-metrics">
-                <div className="conversion-item">
-                  <div className="conversion-label">Total Quotes</div>
-                  <div className="conversion-value">{conversionRates.totalQuotes}</div>
+            <div className="conversion-rates mb-6">
+              <h3 className="font-semibold mb-3">Conversion Rates</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="conversion-item card p-4">
+                  <div className="conversion-label text-sm text-gray-600">Total Quotes</div>
+                  <div className="conversion-value text-2xl font-bold">{conversionRates.totalQuotes}</div>
                 </div>
-                <div className="conversion-item">
-                  <div className="conversion-label">Converted Quotes</div>
-                  <div className="conversion-value">{conversionRates.convertedQuotes}</div>
+                <div className="conversion-item card p-4">
+                  <div className="conversion-label text-sm text-gray-600">Converted Quotes</div>
+                  <div className="conversion-value text-2xl font-bold">{conversionRates.convertedQuotes}</div>
                 </div>
-                <div className="conversion-item">
-                  <div className="conversion-label">Conversion Rate</div>
-                  <div className="conversion-value">{formatPercentage(conversionRates.conversionRate)}</div>
+                <div className="conversion-item card p-4">
+                  <div className="conversion-label text-sm text-gray-600">Conversion Rate</div>
+                  <div className="conversion-value text-2xl font-bold">{formatPercentage(conversionRates.conversionRate)}</div>
                 </div>
               </div>
             </div>
           )}
 
           {winLossRatios && (
-            <div className="win-loss-ratios">
-              <h3>Win/Loss Ratios</h3>
-              <div className="win-loss-metrics">
-                <div className="win-loss-item won">
-                  <div className="win-loss-label">Won Quotes</div>
-                  <div className="win-loss-value">{winLossRatios.wonQuotes}</div>
-                  <div className="win-loss-rate">{formatPercentage(winLossRatios.winRate)}</div>
+            <div className="win-loss-ratios mb-6">
+              <h3 className="font-semibold mb-3">Win/Loss Ratios</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="win-loss-item won card p-4">
+                  <div className="win-loss-label text-sm text-gray-600">Won Quotes</div>
+                  <div className="win-loss-value text-2xl font-bold">{winLossRatios.wonQuotes}</div>
+                  <div className="win-loss-rate text-green-600">{formatPercentage(winLossRatios.winRate)}</div>
                 </div>
-                <div className="win-loss-item lost">
-                  <div className="win-loss-label">Lost Quotes</div>
-                  <div className="win-loss-value">{winLossRatios.lostQuotes}</div>
-                  <div className="win-loss-rate">{formatPercentage(winLossRatios.lossRate)}</div>
+                <div className="win-loss-item lost card p-4">
+                  <div className="win-loss-label text-sm text-gray-600">Lost Quotes</div>
+                  <div className="win-loss-value text-2xl font-bold">{winLossRatios.lostQuotes}</div>
+                  <div className="win-loss-rate text-red-600">{formatPercentage(winLossRatios.lossRate)}</div>
                 </div>
-                <div className="win-loss-item pending">
-                  <div className="win-loss-label">Pending Quotes</div>
-                  <div className="win-loss-value">{winLossRatios.pendingQuotes}</div>
+                <div className="win-loss-item pending card p-4">
+                  <div className="win-loss-label text-sm text-gray-600">Pending Quotes</div>
+                  <div className="win-loss-value text-2xl font-bold">{winLossRatios.pendingQuotes}</div>
                 </div>
               </div>
             </div>
           )}
 
           {!summary && !conversionRates && !winLossRatios && (
-            <div className="no-data">
+            <div className="no-data text-center p-8 text-gray-600">
               <p>No analytics data available. Run ETL pipeline to generate analytics.</p>
             </div>
           )}

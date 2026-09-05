@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../contexts/AuthContext'
-import { FileText, FolderKanban, AlertCircle, TrendingUp } from 'lucide-react'
+import { FileText, FolderKanban, AlertCircle, TrendingUp, Building2 } from 'lucide-react'
+
+interface Workspace {
+  id: string
+  name: string
+  slug: string
+}
 
 export default function Dashboard() {
   const { user, token } = useAuth()
@@ -14,14 +20,48 @@ export default function Dashboard() {
   const [recentQuotes, setRecentQuotes] = useState<any[]>([])
   const [recentProjects, setRecentProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([])
+  const [currentWorkspace, setCurrentWorkspace] = useState<string>(user?.workspaceId || '')
+  const [switching, setSwitching] = useState(false)
 
   useEffect(() => {
     fetchDashboardData()
+    fetchWorkspaces()
   }, [])
+
+  const fetchWorkspaces = async () => {
+    try {
+      const response = await axios.get('/api/v1/auth/workspaces', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setWorkspaces(response.data.data)
+    } catch (error) {
+      console.error('Failed to fetch workspaces:', error)
+    }
+  }
+
+  const handleSwitchWorkspace = async (workspaceId: string) => {
+    if (workspaceId === currentWorkspace) return
+    setSwitching(true)
+    try {
+      const response = await axios.post('/api/v1/auth/switch-workspace', {
+        workspaceId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      const { token: newToken, user: newUser } = response.data.data
+      localStorage.setItem('token', newToken)
+      localStorage.setItem('user', JSON.stringify(newUser))
+      window.location.reload()
+    } catch (error: any) {
+      console.error('Failed to switch workspace:', error)
+      setSwitching(false)
+    }
+  }
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch quotes and projects in parallel
       const [quotesResponse, projectsResponse] = await Promise.all([
         axios.get('/api/v1/quotes', {
           headers: { Authorization: `Bearer ${token}` }
@@ -34,7 +74,6 @@ export default function Dashboard() {
       const quotes = quotesResponse.data.data
       const projects = projectsResponse.data.data
 
-      // Calculate stats
       const activeQuotes = quotes.filter((q: any) => q.status === 'draft' || q.status === 'published').length
       const activeProjects = projects.filter((p: any) => p.status === 'active').length
       const pendingApprovals = quotes.filter((q: any) => q.status === 'published').length
@@ -46,7 +85,6 @@ export default function Dashboard() {
         monthlyRevenue: projects.reduce((sum: number, p: any) => sum + (p.quoted_total_minor || 0), 0)
       })
 
-      // Set recent items (last 3)
       setRecentQuotes(quotes.slice(0, 3))
       setRecentProjects(projects.slice(0, 3))
     } catch (error) {
@@ -58,9 +96,27 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 lg:p-8">
-      <div className="mb-6 lg:mb-8">
-        <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 text-sm lg:text-base">Welcome back, {user?.name}</p>
+      <div className="mb-6 lg:mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 text-sm lg:text-base">Welcome back, {user?.name}</p>
+        </div>
+
+        {workspaces.length > 1 && (
+          <div className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-gray-500" />
+            <select
+              value={currentWorkspace}
+              onChange={(e) => handleSwitchWorkspace(e.target.value)}
+              disabled={switching}
+              className="form-select rounded-lg border-gray-300 py-2 pl-3 pr-8 text-sm focus:ring-primary-500 focus:border-primary-500"
+            >
+              {workspaces.map((w) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Stats */}

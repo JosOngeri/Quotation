@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../lib/axios';
 import Pagination from './Pagination';
 
 interface AuditLog {
@@ -58,7 +58,7 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({ filters }) => {
       if (filters?.startDate) params.startDate = filters.startDate;
       if (filters?.endDate) params.endDate = filters.endDate;
 
-      const response = await axios.get('/api/v1/audit-logs', { params });
+      const response = await api.get('/audit-logs', { params });
       
       setLogs(response.data.data);
       setPagination({
@@ -103,19 +103,9 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({ filters }) => {
   };
 
   return (
-    <div className="audit-log-viewer">
-      <div className="audit-log-header">
-        <h2>Audit Logs</h2>
-        <button
-          onClick={() => window.open('/api/v1/audit-logs/export', '_blank')}
-          className="export-btn"
-        >
-          Export CSV
-        </button>
-      </div>
-
+    <div className="audit-log-viewer" aria-busy={loading}>
       {error && (
-        <div className="error-message">
+        <div className="error-message" role="alert">
           {error}
         </div>
       )}
@@ -124,24 +114,24 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({ filters }) => {
         <div className="loading">Loading audit logs...</div>
       ) : (
         <>
-          <div className="audit-log-table">
-            <table>
+          <div className="audit-log-table overflow-x-auto">
+            <table className="w-full text-sm">
               <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Action</th>
-                  <th>Entity</th>
-                  <th>User ID</th>
-                  <th>IP Address</th>
-                  <th>Status</th>
+                <tr className="text-left text-gray-600 border-b">
+                  <th scope="col" className="pb-2 px-2">Timestamp</th>
+                  <th scope="col" className="pb-2 px-2">Action</th>
+                  <th scope="col" className="pb-2 px-2">Entity</th>
+                  <th scope="col" className="pb-2 px-2">User ID</th>
+                  <th scope="col" className="pb-2 px-2">IP Address</th>
+                  <th scope="col" className="pb-2 px-2">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id}>
-                    <td>{formatDate(log.created_at)}</td>
-                    <td>{formatAction(log.action)}</td>
-                    <td>
+                  <tr key={log.id} className="border-b last:border-b-0">
+                    <td className="py-2 px-2">{formatDate(log.created_at)}</td>
+                    <td className="py-2 px-2">{formatAction(log.action)}</td>
+                    <td className="py-2 px-2">
                       {log.entity_type && (
                         <span>
                           {log.entity_type}
@@ -149,9 +139,9 @@ const AuditLogViewer: React.FC<AuditLogViewerProps> = ({ filters }) => {
                         </span>
                       )}
                     </td>
-                    <td>{log.user_id ? log.user_id.substring(0, 8) : 'N/A'}</td>
-                    <td>{log.ip_address || 'N/A'}</td>
-                    <td>{getStatusBadge(log.status)}</td>
+                    <td className="py-2 px-2">{log.user_id ? log.user_id.substring(0, 8) : 'N/A'}</td>
+                    <td className="py-2 px-2">{log.ip_address || 'N/A'}</td>
+                    <td className="py-2 px-2">{getStatusBadge(log.status)}</td>
                   </tr>
                 ))}
               </tbody>

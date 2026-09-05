@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { Pool } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
-import { authenticateTenant, requireRole } from '../middleware/auth';
+import { authenticateTenant, requireRole, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { createProjectSchema, updateProjectSchema } from '../validations/projects';
 import { env } from '../config/env-validation';
 import { parsePaginationParams, buildPaginationResult, buildOrderByClause } from '../utils/pagination';
 
 const router = Router();
-const pool = new Pool({ 
+const pool = new Pool({
   connectionString: env.DATABASE_URL
 });
 
@@ -16,8 +16,7 @@ const pool = new Pool({
 router.get('/', authenticateTenant, async (req, res) => {
   try {
     const { status, clientId, page, pageSize, sortBy, sortOrder } = req.query;
-    
-    // Parse pagination parameters
+
     const pagination = parsePaginationParams({
       page: page ? parseInt(page as string) : undefined,
       pageSize: pageSize ? parseInt(pageSize as string) : undefined,
@@ -25,9 +24,8 @@ router.get('/', authenticateTenant, async (req, res) => {
       sortOrder: sortOrder as 'ASC' | 'DESC'
     });
 
-    // Build WHERE clause
     let whereClause = 'WHERE p.workspace_id = $1';
-    const params: any[] = [req.workspaceId];
+    const params: any[] = [((req as AuthRequest).workspaceId as string)];
     let paramCount = 1;
 
     if (status) {
@@ -42,23 +40,20 @@ router.get('/', authenticateTenant, async (req, res) => {
       params.push(clientId);
     }
 
-    // Build ORDER BY clause
     const orderByClause = buildOrderByClause(pagination.sortBy, pagination.sortOrder);
 
-    // Get total count
     const countQuery = `
-      SELECT COUNT(*) as total 
-      FROM project p 
+      SELECT COUNT(*) as total
+      FROM project p
       ${whereClause}
     `;
     const countResult = await pool.query(countQuery, params);
     const total = parseInt(countResult.rows[0].total);
 
-    // Get paginated data
     const dataQuery = `
-      SELECT p.*, c.name as client_name 
-      FROM project p 
-      JOIN client c ON p.client_id = c.id 
+      SELECT p.*, c.name as client_name
+      FROM project p
+      JOIN client c ON p.client_id = c.id
       ${whereClause}
       ${orderByClause}
       LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
@@ -67,89 +62,17 @@ router.get('/', authenticateTenant, async (req, res) => {
 
     const result = await pool.query(dataQuery, params);
 
-    // Build pagination result
     const paginatedResult = buildPaginationResult(result.rows, total, pagination);
 
     res.json(paginatedResult);
   } catch (error) {
     console.error('List projects error:', error);
-    res.status(500).json({ 
-      error: { code: 'INTERNAL_ERROR', message: 'An error occurred fetching projects' } 
+    res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'An error occurred fetching projects' }
     });
   }
 });
 
-/**
- * @swagger
- * /api/v1/projects:
- *   post:
- *     summary: Create new project
- *     tags: [Projects]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [clientId, title]
- *             properties:
- *               clientId:
- *                 type: string
- *                 format: uuid
- *                 example: "550e8400-e29b-41d4-a716-446655440000"
- *               quoteId:
- *                 type: string
- *                 format: uuid
- *                 example: "660e8400-e29b-41d4-a716-446655440000"
- *               title:
- *                 type: string
- *                 example: "Construction Project"
- *               status:
- *                 type: string
- *                 enum: [planning, active, on_hold, completed, cancelled]
- *                 default: "planning"
- *               startDate:
- *                 type: string
- *                 format: date
- *                 example: "2024-01-01"
- *               targetEndDate:
- *                 type: string
- *                 format: date
- *                 example: "2024-12-31"
- *               quotedTotalMinor:
- *                 type: integer
- *                 example: 1000000
- *     responses:
- *       201:
- *         description: Project created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   $ref: '#/components/schemas/Project'
- *       400:
- *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       403:
- *         description: Forbidden - Insufficient permissions
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
 // Create project (tenant admin, estimator, project manager)
 router.post('/', authenticateTenant, requireRole(['tenant_admin', 'estimator', 'project_manager']), validateRequest(createProjectSchema), async (req, res) => {
   try {
@@ -157,17 +80,17 @@ router.post('/', authenticateTenant, requireRole(['tenant_admin', 'estimator', '
 
     const projectId = uuidv4();
     const result = await pool.query(
-      `INSERT INTO project (id, workspace_id, client_id, quote_id, title, status, start_date, target_end_date, quoted_total_minor, created_by) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+      `INSERT INTO project (id, workspace_id, client_id, quote_id, title, status, start_date, target_end_date, quoted_total_minor, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [projectId, req.workspaceId, clientId, quoteId, title, status || 'planning', startDate, targetEndDate, quotedTotalMinor, req.userId]
+      [projectId, ((req as AuthRequest).workspaceId as string), clientId, quoteId, title, status || 'planning', startDate, targetEndDate, quotedTotalMinor, ((req as AuthRequest).userId as string)]
     );
 
     res.status(201).json({ data: result.rows[0] });
   } catch (error: any) {
     console.error('Create project error:', error);
-    res.status(500).json({ 
-      error: { code: 'INTERNAL_ERROR', message: 'An error occurred creating project' } 
+    res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'An error occurred creating project' }
     });
   }
 });
@@ -178,24 +101,24 @@ router.get('/:id', authenticateTenant, async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT p.*, c.name as client_name 
-       FROM project p 
-       JOIN client c ON p.client_id = c.id 
+      `SELECT p.*, c.name as client_name
+       FROM project p
+       JOIN client c ON p.client_id = c.id
        WHERE p.id = $1 AND p.workspace_id = $2`,
-      [id, req.workspaceId]
+      [id, ((req as AuthRequest).workspaceId as string)]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ 
-        error: { code: 'NOT_FOUND', message: 'Project not found' } 
+      return res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Project not found' }
       });
     }
 
     res.json({ data: result.rows[0] });
   } catch (error) {
     console.error('Get project error:', error);
-    res.status(500).json({ 
-      error: { code: 'INTERNAL_ERROR', message: 'An error occurred fetching project' } 
+    res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'An error occurred fetching project' }
     });
   }
 });
@@ -207,7 +130,7 @@ router.put('/:id', authenticateTenant, requireRole(['tenant_admin', 'project_man
     const { title, status, startDate, targetEndDate, actualEndDate, actualTotalMinor } = req.body;
 
     const result = await pool.query(
-      `UPDATE project 
+      `UPDATE project
        SET title = COALESCE($1, title),
            status = COALESCE($2, status),
            start_date = COALESCE($3, start_date),
@@ -217,20 +140,20 @@ router.put('/:id', authenticateTenant, requireRole(['tenant_admin', 'project_man
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $7 AND workspace_id = $8
        RETURNING *`,
-      [title, status, startDate, targetEndDate, actualEndDate, actualTotalMinor, id, req.workspaceId]
+      [title, status, startDate, targetEndDate, actualEndDate, actualTotalMinor, id, ((req as AuthRequest).workspaceId as string)]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ 
-        error: { code: 'NOT_FOUND', message: 'Project not found' } 
+      return res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Project not found' }
       });
     }
 
     res.json({ data: result.rows[0] });
   } catch (error) {
     console.error('Update project error:', error);
-    res.status(500).json({ 
-      error: { code: 'INTERNAL_ERROR', message: 'An error occurred updating project' } 
+    res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'An error occurred updating project' }
     });
   }
 });
@@ -242,14 +165,14 @@ router.delete('/:id', authenticateTenant, requireRole(['tenant_admin']), async (
 
     await pool.query(
       'DELETE FROM project WHERE id = $1 AND workspace_id = $2',
-      [id, req.workspaceId]
+      [id, ((req as AuthRequest).workspaceId as string)]
     );
 
     res.json({ data: { message: 'Project deleted successfully' } });
   } catch (error) {
     console.error('Delete project error:', error);
-    res.status(500).json({ 
-      error: { code: 'INTERNAL_ERROR', message: 'An error occurred deleting project' } 
+    res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'An error occurred deleting project' }
     });
   }
 });
@@ -260,10 +183,10 @@ router.get('/:id/cost-events', authenticateTenant, async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT ce.*, s.name as supplier_name 
-       FROM cost_event ce 
-       LEFT JOIN supplier s ON ce.supplier_id = s.id 
-       WHERE ce.project_id = $1 
+      `SELECT ce.*, s.name as supplier_name
+       FROM cost_event ce
+       LEFT JOIN supplier s ON ce.supplier_id = s.id
+       WHERE ce.project_id = $1
        ORDER BY ce.created_at DESC`,
       [id]
     );
@@ -271,8 +194,8 @@ router.get('/:id/cost-events', authenticateTenant, async (req, res) => {
     res.json({ data: result.rows });
   } catch (error) {
     console.error('Get cost events error:', error);
-    res.status(500).json({ 
-      error: { code: 'INTERNAL_ERROR', message: 'An error occurred fetching cost events' } 
+    res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'An error occurred fetching cost events' }
     });
   }
 });
@@ -285,17 +208,156 @@ router.post('/:id/cost-events', authenticateTenant, requireRole(['tenant_admin',
 
     const costEventId = uuidv4();
     const result = await pool.query(
-      `INSERT INTO cost_event (id, project_id, quote_item_id, event_type, description, quantity, unit, unit_cost_minor, currency, total_cost_minor, supplier_id, invoice_reference, document_url, reason, created_by) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
+      `INSERT INTO cost_event (id, project_id, quote_item_id, event_type, description, quantity, unit, unit_cost_minor, currency, total_cost_minor, supplier_id, invoice_reference, document_url, reason, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING *`,
-      [costEventId, id, quoteItemId, eventType, description, quantity, unit, unitCostMinor, currency || 'KES', totalCostMinor, supplierId, invoiceReference, documentUrl, reason, req.userId]
+      [costEventId, id, quoteItemId, eventType, description, quantity, unit, unitCostMinor, currency || 'KES', totalCostMinor, supplierId, invoiceReference, documentUrl, reason, ((req as AuthRequest).userId as string)]
     );
+
+    try {
+      const { getWebSocketService } = require('../index');
+      getWebSocketService()?.notifyProjectUpdate(id, ((req as AuthRequest).workspaceId as string) as string, { type: 'cost_event' });
+    } catch {}
 
     res.status(201).json({ data: result.rows[0] });
   } catch (error: any) {
     console.error('Create cost event error:', error);
-    res.status(500).json({ 
-      error: { code: 'INTERNAL_ERROR', message: 'An error occurred creating cost event' } 
+    res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'An error occurred creating cost event' }
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/v1/projects/{id}/cost-summary:
+ *   get:
+ *     summary: Get project cost summary
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Cost summary retrieved successfully
+ */
+router.get('/:id/cost-summary', authenticateTenant, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const projectResult = await pool.query(
+      `SELECT quoted_total_minor FROM project WHERE id = $1 AND workspace_id = $2`,
+      [id, ((req as AuthRequest).workspaceId as string)]
+    );
+
+    if (projectResult.rows.length === 0) {
+      return res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Project not found' }
+      });
+    }
+
+    const quotedTotalMinor = projectResult.rows[0].quoted_total_minor || 0;
+
+    const costResult = await pool.query(
+      `SELECT event_type, COALESCE(SUM(total_cost_minor), 0) as total
+       FROM cost_event
+       WHERE project_id = $1
+       GROUP BY event_type`,
+      [id]
+    );
+
+    const byEventType: Record<string, number> = {
+      actual: 0,
+      substitution: 0,
+      addition: 0
+    };
+
+    let actualTotalMinor = 0;
+    for (const row of costResult.rows) {
+      const total = parseInt(row.total);
+      byEventType[row.event_type] = total;
+      actualTotalMinor += total;
+    }
+
+    await pool.query(
+      `UPDATE project SET actual_total_minor = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+      [actualTotalMinor, id]
+    );
+
+    res.json({
+      data: {
+        quoted_total_minor: quotedTotalMinor,
+        actual_total_minor: actualTotalMinor,
+        variance_minor: quotedTotalMinor - actualTotalMinor,
+        by_event_type: byEventType
+      }
+    });
+  } catch (error) {
+    console.error('Get cost summary error:', error);
+    res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'An error occurred fetching cost summary' }
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/v1/projects/{id}/cost-events/{eventId}/approve:
+ *   post:
+ *     summary: Approve a cost event
+ *     tags: [Projects]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Cost event approved successfully
+ */
+router.post('/:id/cost-events/:eventId/approve', authenticateTenant, requireRole(['tenant_admin', 'project_manager']), async (req, res) => {
+  try {
+    const { id, eventId } = req.params;
+
+    const result = await pool.query(
+      `UPDATE cost_event
+       SET approved_by = $1, approved_at = CURRENT_TIMESTAMP
+       WHERE id = $2 AND project_id = $3
+         AND EXISTS (
+           SELECT 1 FROM project p
+           WHERE p.id = cost_event.project_id AND p.workspace_id = $4
+         )
+       RETURNING *`,
+      [((req as AuthRequest).userId as string), eventId, id, ((req as AuthRequest).workspaceId as string)]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Cost event not found' }
+      });
+    }
+
+    res.json({ data: result.rows[0] });
+  } catch (error) {
+    console.error('Approve cost event error:', error);
+    res.status(500).json({
+      error: { code: 'INTERNAL_ERROR', message: 'An error occurred approving cost event' }
     });
   }
 });

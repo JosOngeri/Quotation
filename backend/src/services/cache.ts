@@ -68,7 +68,7 @@ class CacheService {
 
     try {
       const value = await this.client.get(key);
-      return value;
+      return value as string | null;
     } catch (error) {
       logger.error({ error, key }, 'Cache get error');
       return null;
@@ -137,7 +137,7 @@ class CacheService {
     try {
       const value = await this.client.get(key);
       if (value) {
-        return JSON.parse(value) as T;
+        return JSON.parse(value as string) as T;
       }
       return null;
     } catch (error) {

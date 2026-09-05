@@ -367,7 +367,7 @@ router.post('/:id/execute', authenticateTenant, requireRole(['tenant_admin', 'es
 router.get('/:id/export', authenticateTenant, requireRole(['tenant_admin', 'estimator', 'procurement']), async (req, res) => {
   try {
     const { id } = req.params;
-    const format = (req.query.format as string) || 'csv';
+    const format = ((req.query.format as string) || 'csv') as 'json' | 'csv' | 'pdf';
     const workspaceId = (req as any).workspaceId;
 
     const result = await reportBuilderService.exportReport(id, format, workspaceId);

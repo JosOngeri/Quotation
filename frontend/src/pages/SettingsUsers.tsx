@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../lib/axios'
 import { useAuth } from '../contexts/AuthContext'
 import { Plus, Search, Shield, Mail, Clock } from 'lucide-react'
 
@@ -14,7 +14,7 @@ interface User {
 }
 
 export default function SettingsUsers() {
-  const { token, isTenantAdmin } = useAuth()
+  const { isTenantAdmin } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -28,9 +28,7 @@ export default function SettingsUsers() {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('/api/v1/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await api.get('/users')
       setUsers(response.data.data)
     } catch (error) {
       console.error('Failed to fetch users:', error)
@@ -42,9 +40,7 @@ export default function SettingsUsers() {
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await axios.post('/api/v1/users', newUser, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await api.post('/users/invite', newUser)
       setShowInviteModal(false)
       setNewUser({ email: '', name: '', roles: ['staff_viewer'] })
       fetchUsers()

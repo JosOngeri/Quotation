@@ -20,9 +20,6 @@ export const securityHeaders = helmet({
     preload: true
   },
   xFrameOptions: { action: 'deny' },
-  xContentTypeOptions: { nosniff: true },
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  permissionsPolicy: {
-    features: ['geolocation', 'notifications']
-  }
-});
+  xContentTypeOptions: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+} as any);

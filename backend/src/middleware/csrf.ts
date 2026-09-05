@@ -8,7 +8,7 @@ export const generateCSRFToken = (): string => {
 
 export const validateCSRFToken = (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers['x-csrf-token'] as string;
-  const sessionToken = req.session?.csrfToken;
+  const sessionToken = (req as any).session?.csrfToken;
 
   if (!token || !sessionToken || token !== sessionToken) {
     return res.status(403).json({
@@ -20,14 +20,15 @@ export const validateCSRFToken = (req: Request, res: Response, next: NextFunctio
 };
 
 export const setCSRFToken = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session) {
+  const session = (req as any).session;
+  if (!session) {
     return next();
   }
 
-  if (!req.session.csrfToken) {
-    req.session.csrfToken = generateCSRFToken();
+  if (!session.csrfToken) {
+    session.csrfToken = generateCSRFToken();
   }
 
-  res.setHeader('X-CSRF-Token', req.session.csrfToken);
+  res.setHeader('X-CSRF-Token', session.csrfToken);
   next();
 };

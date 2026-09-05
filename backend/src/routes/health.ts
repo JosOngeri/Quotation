@@ -86,7 +86,7 @@ router.get('/', async (req, res) => {
     healthCheck.status = allHealthy ? 'healthy' : 'degraded';
 
     const statusCode = healthCheck.status === 'healthy' ? 200 : 503;
-    res.status(status).json(healthCheck);
+    res.status(statusCode).json(healthCheck);
   } catch (error) {
     healthCheck.status = 'unhealthy';
     res.status(503).json(healthCheck);
@@ -141,7 +141,7 @@ router.get('/ready', async (req, res) => {
     readinessCheck.status = allReady ? 'ready' : 'not_ready';
 
     const statusCode = readinessCheck.status === 'ready' ? 200 : 503;
-    res.status(status).json(readinessCheck);
+    res.status(statusCode).json(readinessCheck);
   } catch (error) {
     readinessCheck.status = 'not_ready';
     res.status(503).json(readinessCheck);

@@ -6,12 +6,18 @@ import PlatformAdminDashboard from './pages/PlatformAdminDashboard'
 import ClientPortal from './pages/ClientPortal'
 import Dashboard from './pages/Dashboard'
 import Quotes from './pages/Quotes'
+import QuotesEditor from './pages/QuotesEditor'
 import Projects from './pages/Projects'
 import Clients from './pages/Clients'
 import Suppliers from './pages/Suppliers'
 import Products from './pages/Products'
 import Reports from './pages/Reports'
-import SettingsUsers from './pages/SettingsUsers'
+import Settings from './pages/Settings'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
+import Approvals from './pages/Approvals'
+import AuditLogs from './pages/AuditLogs'
+import Analytics from './pages/Analytics'
 import NotFound from './pages/NotFound'
 import ServerError from './pages/ServerError'
 import Layout from './components/Layout'
@@ -25,6 +31,8 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Platform Admin routes */}
             <Route 
@@ -66,6 +74,14 @@ function App() {
                 } 
               />
               <Route 
+                path="quotes/:id/edit" 
+                element={
+                  <ProtectedRoute requireEstimator>
+                    <QuotesEditor />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="projects" 
                 element={
                   <ProtectedRoute>
@@ -102,14 +118,46 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Reports />
-                </ProtectedRoute>
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="analytics" 
+                element={
+                  <ProtectedRoute>
+                    <Analytics />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="approvals" 
+                element={
+                  <ProtectedRoute requireTenantAdmin>
+                    <Approvals />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="audit-logs" 
+                element={
+                  <ProtectedRoute requireTenantAdmin>
+                    <AuditLogs />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="settings" 
+                element={
+                  <ProtectedRoute requireTenantAdmin>
+                    <Settings />
+                  </ProtectedRoute>
                 } 
               />
               <Route 
                 path="settings/users" 
                 element={
                   <ProtectedRoute requireTenantAdmin>
-                    <SettingsUsers />
+                    <Settings />
                   </ProtectedRoute>
                 } 
               />

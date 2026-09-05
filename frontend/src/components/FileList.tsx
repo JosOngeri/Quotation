@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../lib/axios';
 
-interface File {
+interface UploadedFile {
   id: string;
   filename: string;
   original_filename: string;
@@ -27,7 +27,7 @@ const FileList: React.FC<FileListProps> = ({
   refreshTrigger,
   onFileDelete
 }) => {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +45,7 @@ const FileList: React.FC<FileListProps> = ({
       if (entityType) params.entityType = entityType;
       if (entityId) params.entityId = entityId;
 
-      const response = await axios.get('/api/v1/files', { params });
+      const response = await api.get('/files', { params });
       setFiles(response.data.data);
     } catch (err: any) {
       setError(err.response?.data?.error?.message || 'Failed to fetch files');
@@ -56,7 +56,7 @@ const FileList: React.FC<FileListProps> = ({
 
   const handleDownload = async (fileId: string, filename: string) => {
     try {
-      const response = await axios.get(`/api/v1/files/${fileId}/download`, {
+      const response = await api.get(`/files/${fileId}/download`, {
         responseType: 'blob'
       });
 
@@ -79,7 +79,7 @@ const FileList: React.FC<FileListProps> = ({
     }
 
     try {
-      await axios.delete(`/api/v1/files/${fileId}`);
+      await api.delete(`/files/${fileId}`);
       setFiles(files.filter(file => file.id !== fileId));
       onFileDelete?.(fileId);
     } catch (err: any) {
@@ -103,16 +103,12 @@ const FileList: React.FC<FileListProps> = ({
     return '📎';
   };
 
-  const isImage = (fileType: string) => {
-    return fileType.includes('image');
-  };
-
   if (loading) {
-    return <div className="file-list loading">Loading files...</div>;
+    return <div className="file-list loading" aria-busy="true">Loading files...</div>;
   }
 
   if (error) {
-    return <div className="file-list error">{error}</div>;
+    return <div className="file-list error" role="alert">{error}</div>;
   }
 
   if (files.length === 0) {
@@ -125,7 +121,7 @@ const FileList: React.FC<FileListProps> = ({
       <div className="files-grid">
         {files.map((file) => (
           <div key={file.id} className="file-item">
-            <div className="file-icon">
+            <div className="file-icon" aria-hidden="true">
               {getFileIcon(file.file_type)}
             </div>
             <div className="file-info">
@@ -146,6 +142,7 @@ const FileList: React.FC<FileListProps> = ({
               <button
                 onClick={() => handleDownload(file.id, file.original_filename)}
                 className="download-btn"
+                aria-label={`Download ${file.original_filename}`}
                 title="Download"
               >
                 ⬇️
@@ -153,6 +150,7 @@ const FileList: React.FC<FileListProps> = ({
               <button
                 onClick={() => handleDelete(file.id)}
                 className="delete-btn"
+                aria-label={`Delete ${file.original_filename}`}
                 title="Delete"
               >
                 🗑️

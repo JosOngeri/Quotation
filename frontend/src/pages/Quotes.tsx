@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { useAuth } from '../contexts/AuthContext'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../lib/axios'
 import { Plus, Search, Filter } from 'lucide-react'
+import Pagination from '../components/Pagination'
 
 interface Quote {
   id: string
@@ -14,35 +15,46 @@ interface Quote {
 }
 
 export default function Quotes() {
-  const { token } = useAuth()
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newQuote, setNewQuote] = useState({ title: '', clientId: '', validUntil: '' })
+  const [search, setSearch] = useState('')
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 20, total: 0, totalPages: 1 })
+  const navigate = useNavigate()
 
-  useEffect(() => {
-    fetchQuotes()
-  }, [])
-
-  const fetchQuotes = async () => {
+  const fetchQuotes = useCallback(async () => {
+    setLoading(true)
     try {
-      const response = await axios.get('/api/v1/quotes', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const params: any = {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      }
+      if (search) params.search = search
+
+      const response = await api.get('/quotes', { params })
       setQuotes(response.data.data)
+      setPagination({
+        page: response.data.pagination.page,
+        pageSize: response.data.pagination.pageSize,
+        total: response.data.pagination.total,
+        totalPages: response.data.pagination.totalPages
+      })
     } catch (error) {
       console.error('Failed to fetch quotes:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, pagination.page, pagination.pageSize])
+
+  useEffect(() => {
+    fetchQuotes()
+  }, [fetchQuotes])
 
   const handleCreateQuote = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await axios.post('/api/v1/quotes', newQuote, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await api.post('/quotes', newQuote)
       setShowCreateModal(false)
       setNewQuote({ title: '', clientId: '', validUntil: '' })
       fetchQuotes()
@@ -61,6 +73,14 @@ export default function Quotes() {
     }
   }
 
+  const handlePageChange = (page: number) => {
+    setPagination({ ...pagination, page })
+  }
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPagination({ ...pagination, page: 1, pageSize })
+  }
+
   return (
     <div className="p-4 lg:p-8">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 lg:mb-8 gap-4">
@@ -72,7 +92,7 @@ export default function Quotes() {
           onClick={() => setShowCreateModal(true)}
           className="btn btn-primary flex items-center gap-2 w-full lg:w-auto justify-center"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4" aria-hidden="true" />
           New Quote
         </button>
       </div>
@@ -80,15 +100,19 @@ export default function Quotes() {
       {/* Filters */}
       <div className="card mb-4 lg:mb-6 p-4 flex flex-col lg:flex-row items-center gap-4">
         <div className="flex-1 relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
           <input
+            id="quote-search"
             type="text"
             placeholder="Search quotes..."
-            className="input pl-10"
+            className="input pl-10 w-full"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search quotes"
           />
         </div>
-        <button className="btn btn-secondary flex items-center gap-2 w-full lg:w-auto justify-center">
-          <Filter className="w-4 h-4" />
+        <button className="btn btn-secondary flex items-center gap-2 w-full lg:w-auto justify-center" aria-label="Filter quotes">
+          <Filter className="w-4 h-4" aria-hidden="true" />
           Filter
         </button>
       </div>
@@ -99,19 +123,19 @@ export default function Quotes() {
           <table className="w-full">
             <thead>
               <tr className="text-left text-sm text-gray-600 border-b">
-                <th className="pb-3 px-6">Quote #</th>
-                <th className="pb-3 px-6">Title</th>
-                <th className="pb-3 px-6">Client</th>
-                <th className="pb-3 px-6">Status</th>
-                <th className="pb-3 px-6">Valid Until</th>
-                <th className="pb-3 px-6">Created</th>
-                <th className="pb-3 px-6">Actions</th>
+                <th scope="col" className="pb-3 px-6">Quote #</th>
+                <th scope="col" className="pb-3 px-6">Title</th>
+                <th scope="col" className="pb-3 px-6">Client</th>
+                <th scope="col" className="pb-3 px-6">Status</th>
+                <th scope="col" className="pb-3 px-6">Valid Until</th>
+                <th scope="col" className="pb-3 px-6">Created</th>
+                <th scope="col" className="pb-3 px-6">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-600">Loading...</td>
+                  <td colSpan={7} className="py-8 text-center text-gray-600" aria-busy="true">Loading...</td>
                 </tr>
               ) : quotes.length === 0 ? (
                 <tr>
@@ -135,8 +159,12 @@ export default function Quotes() {
                       {new Date(quote.created_at).toLocaleDateString()}
                     </td>
                     <td className="py-4 px-6">
-                      <button className="text-primary-600 hover:text-primary-800 mr-2">View</button>
-                      <button className="text-gray-600 hover:text-gray-800">Edit</button>
+                      <button
+                        onClick={() => navigate(`/quotes/${quote.id}/edit`)}
+                        className="text-primary-600 hover:text-primary-800 mr-2"
+                      >
+                        Edit
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -149,12 +177,16 @@ export default function Quotes() {
       {/* Quotes Cards - Mobile */}
       <div className="lg:hidden space-y-4">
         {loading ? (
-          <div className="card p-4 text-center text-gray-600">Loading...</div>
+          <div className="card p-4 text-center text-gray-600" aria-busy="true">Loading...</div>
         ) : quotes.length === 0 ? (
           <div className="card p-4 text-center text-gray-600">No quotes found</div>
         ) : (
           quotes.map((quote) => (
-            <div key={quote.id} className="card p-4">
+            <button
+              key={quote.id}
+              onClick={() => navigate(`/quotes/${quote.id}/edit`)}
+              className="card p-4 w-full text-left"
+            >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-base truncate">QT-{quote.id.slice(0, 8)}</h3>
@@ -173,24 +205,40 @@ export default function Quotes() {
                   Valid until: {new Date(quote.valid_until).toLocaleDateString()}
                 </div>
               )}
-              <div className="flex gap-2">
-                <button className="flex-1 btn btn-secondary text-sm py-2">View</button>
-                <button className="flex-1 btn btn-secondary text-sm py-2">Edit</button>
-              </div>
-            </div>
+            </button>
           ))
         )}
       </div>
 
+      {pagination.totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </div>
+      )}
+
       {/* Create Quote Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Create New Quote</h3>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          onClick={(e) => e.target === e.currentTarget && setShowCreateModal(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="quote-modal-title"
+        >
+          <div className="bg-white rounded-lg w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <h3 id="quote-modal-title" className="text-lg font-semibold mb-4">Create New Quote</h3>
             <form onSubmit={handleCreateQuote} className="space-y-4">
               <div>
-                <label className="label">Quote Title</label>
+                <label htmlFor="quote-title" className="label">Quote Title</label>
                 <input
+                  id="quote-title"
                   type="text"
                   value={newQuote.title}
                   onChange={(e) => setNewQuote({ ...newQuote, title: e.target.value })}
@@ -199,8 +247,9 @@ export default function Quotes() {
                 />
               </div>
               <div>
-                <label className="label">Client ID</label>
+                <label htmlFor="quote-client" className="label">Client ID</label>
                 <input
+                  id="quote-client"
                   type="text"
                   value={newQuote.clientId}
                   onChange={(e) => setNewQuote({ ...newQuote, clientId: e.target.value })}
@@ -210,8 +259,9 @@ export default function Quotes() {
                 />
               </div>
               <div>
-                <label className="label">Valid Until</label>
+                <label htmlFor="quote-valid" className="label">Valid Until</label>
                 <input
+                  id="quote-valid"
                   type="date"
                   value={newQuote.validUntil}
                   onChange={(e) => setNewQuote({ ...newQuote, validUntil: e.target.value })}

@@ -110,7 +110,7 @@ router.get('/', authenticatePlatformAdmin, async (req, res) => {
 });
 
 // Get current workspace (tenant)
-router.get('/current', authenticateTenant, async (req, res) => {
+router.get('/current', authenticateTenant, async (req: any, res) => {
   try {
     const result = await pool.query(
       'SELECT * FROM workspace WHERE id = $1',
@@ -133,7 +133,7 @@ router.get('/current', authenticateTenant, async (req, res) => {
 });
 
 // Update workspace (tenant admin only)
-router.put('/current', authenticateTenant, requireRole(['tenant_admin']), validateRequest(updateWorkspaceSchema), async (req, res) => {
+router.put('/current', authenticateTenant, requireRole(['tenant_admin']), validateRequest(updateWorkspaceSchema), async (req: any, res) => {
   try {
     const { name, reportingCurrency, defaultLocale } = req.body;
 

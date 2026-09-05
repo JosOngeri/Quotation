@@ -17,6 +17,11 @@ export const clientLoginSchema = z.object({
   password: passwordSchema
 });
 
+export const unifiedLoginSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema
+});
+
 export const passwordResetSchema = z.object({
   email: emailSchema,
   token: z.string().min(1, 'Reset token is required'),

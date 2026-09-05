@@ -55,7 +55,7 @@ export class AuditLogger {
 
   async logAuthentication(
     userId: string,
-    action: 'login' | 'logout' | 'password_change' | 'password_reset',
+    action: 'login' | 'logout' | 'password_change' | 'password_reset' | 'login_2fa',
     status: 'success' | 'failure',
     ipAddress?: string,
     userAgent?: string,
@@ -153,7 +153,7 @@ export const createAuditMiddleware = (auditLogger: AuditLogger) => {
       const userAgent = req.get('user-agent');
 
       // Intercept response to log on completion
-      res.send = function(this: Response, data: any) {
+      res.send = function(this: any, data: any): any {
         const statusCode = res.statusCode;
         const isSuccess = statusCode >= 200 && statusCode < 300;
 

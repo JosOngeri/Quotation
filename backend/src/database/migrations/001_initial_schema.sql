@@ -5,16 +5,29 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Enums
-CREATE TYPE user_role AS ENUM ('platform_admin', 'tenant_admin', 'estimator', 'procurement', 'project_manager', 'staff_viewer', 'client');
-CREATE TYPE quote_status AS ENUM ('draft', 'published', 'accepted', 'rejected', 'superseded');
-CREATE TYPE project_status AS ENUM ('planning', 'active', 'on_hold', 'completed', 'cancelled');
-CREATE TYPE cost_event_type AS ENUM ('actual', 'substitution', 'addition');
-CREATE TYPE template_status AS ENUM ('draft', 'published', 'retired');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+    CREATE TYPE user_role AS ENUM ('platform_admin', 'tenant_admin', 'estimator', 'procurement', 'project_manager', 'staff_viewer', 'client');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'quote_status') THEN
+    CREATE TYPE quote_status AS ENUM ('draft', 'published', 'accepted', 'rejected', 'superseded');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'project_status') THEN
+    CREATE TYPE project_status AS ENUM ('planning', 'active', 'on_hold', 'completed', 'cancelled');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'cost_event_type') THEN
+    CREATE TYPE cost_event_type AS ENUM ('actual', 'substitution', 'addition');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'template_status') THEN
+    CREATE TYPE template_status AS ENUM ('draft', 'published', 'retired');
+  END IF;
+END$$;
 
 -- Tables
 
 -- Platform Admin (main admin who runs the site)
-CREATE TABLE platform_admin (
+CREATE TABLE IF NOT EXISTS platform_admin (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
@@ -24,7 +37,7 @@ CREATE TABLE platform_admin (
 );
 
 -- Workspaces (tenants)
-CREATE TABLE workspace (
+CREATE TABLE IF NOT EXISTS workspace (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(100) UNIQUE NOT NULL,
@@ -35,7 +48,7 @@ CREATE TABLE workspace (
 );
 
 -- Users (tenant users)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workspace_id UUID NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
   email VARCHAR(255) NOT NULL,
@@ -50,7 +63,7 @@ CREATE TABLE users (
 );
 
 -- Clients
-CREATE TABLE client (
+CREATE TABLE IF NOT EXISTS client (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workspace_id UUID NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
@@ -65,7 +78,7 @@ CREATE TABLE client (
 );
 
 -- Client Users (portal users)
-CREATE TABLE client_user (
+CREATE TABLE IF NOT EXISTS client_user (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   client_id UUID NOT NULL REFERENCES client(id) ON DELETE CASCADE,
   email VARCHAR(255) NOT NULL,
@@ -79,7 +92,7 @@ CREATE TABLE client_user (
 );
 
 -- Suppliers
-CREATE TABLE supplier (
+CREATE TABLE IF NOT EXISTS supplier (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workspace_id UUID NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
@@ -96,7 +109,7 @@ CREATE TABLE supplier (
 );
 
 -- Products
-CREATE TABLE product (
+CREATE TABLE IF NOT EXISTS product (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workspace_id UUID NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
   sku VARCHAR(100) NOT NULL,
@@ -112,7 +125,7 @@ CREATE TABLE product (
 );
 
 -- Supplier Offers
-CREATE TABLE supplier_offer (
+CREATE TABLE IF NOT EXISTS supplier_offer (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES product(id) ON DELETE CASCADE,
@@ -130,7 +143,7 @@ CREATE TABLE supplier_offer (
 );
 
 -- Quotes
-CREATE TABLE quote (
+CREATE TABLE IF NOT EXISTS quote (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workspace_id UUID NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
   client_id UUID NOT NULL REFERENCES client(id) ON DELETE CASCADE,
@@ -145,7 +158,7 @@ CREATE TABLE quote (
 );
 
 -- Quote Revisions
-CREATE TABLE quote_revision (
+CREATE TABLE IF NOT EXISTS quote_revision (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   quote_id UUID NOT NULL REFERENCES quote(id) ON DELETE CASCADE,
   version INTEGER NOT NULL,
@@ -159,7 +172,7 @@ CREATE TABLE quote_revision (
 );
 
 -- Quote Nodes (hierarchical structure)
-CREATE TABLE quote_node (
+CREATE TABLE IF NOT EXISTS quote_node (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   revision_id UUID NOT NULL REFERENCES quote_revision(id) ON DELETE CASCADE,
   parent_node_id UUID REFERENCES quote_node(id) ON DELETE CASCADE,
@@ -171,7 +184,7 @@ CREATE TABLE quote_node (
 );
 
 -- Quote Items
-CREATE TABLE quote_item (
+CREATE TABLE IF NOT EXISTS quote_item (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   node_id UUID NOT NULL REFERENCES quote_node(id) ON DELETE CASCADE,
   product_id UUID REFERENCES product(id) ON DELETE SET NULL,
@@ -190,7 +203,7 @@ CREATE TABLE quote_item (
 );
 
 -- Projects
-CREATE TABLE project (
+CREATE TABLE IF NOT EXISTS project (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workspace_id UUID NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
   client_id UUID NOT NULL REFERENCES client(id) ON DELETE CASCADE,
@@ -208,7 +221,7 @@ CREATE TABLE project (
 );
 
 -- Cost Events
-CREATE TABLE cost_event (
+CREATE TABLE IF NOT EXISTS cost_event (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES project(id) ON DELETE CASCADE,
   quote_item_id UUID REFERENCES quote_item(id) ON DELETE SET NULL,
@@ -230,7 +243,7 @@ CREATE TABLE cost_event (
 );
 
 -- Supplier Performance
-CREATE TABLE supplier_performance (
+CREATE TABLE IF NOT EXISTS supplier_performance (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   supplier_id UUID NOT NULL REFERENCES supplier(id) ON DELETE CASCADE,
   project_id UUID REFERENCES project(id) ON DELETE SET NULL,
@@ -243,15 +256,15 @@ CREATE TABLE supplier_performance (
 );
 
 -- Indexes for better performance
-CREATE INDEX idx_users_workspace ON users(workspace_id);
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_client_workspace ON client(workspace_id);
-CREATE INDEX idx_supplier_workspace ON supplier(workspace_id);
-CREATE INDEX idx_product_workspace ON product(workspace_id);
-CREATE INDEX idx_quote_workspace ON quote(workspace_id);
-CREATE INDEX idx_quote_client ON quote(client_id);
-CREATE INDEX idx_project_workspace ON project(workspace_id);
-CREATE INDEX idx_project_client ON project(client_id);
-CREATE INDEX idx_cost_event_project ON cost_event(project_id);
-CREATE INDEX idx_supplier_offer_product ON supplier_offer(product_id);
-CREATE INDEX idx_supplier_offer_supplier ON supplier_offer(supplier_id);
+CREATE INDEX IF NOT EXISTS idx_users_workspace ON users(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_client_workspace ON client(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_supplier_workspace ON supplier(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_product_workspace ON product(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_quote_workspace ON quote(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_quote_client ON quote(client_id);
+CREATE INDEX IF NOT EXISTS idx_project_workspace ON project(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_project_client ON project(client_id);
+CREATE INDEX IF NOT EXISTS idx_cost_event_project ON cost_event(project_id);
+CREATE INDEX IF NOT EXISTS idx_supplier_offer_product ON supplier_offer(product_id);
+CREATE INDEX IF NOT EXISTS idx_supplier_offer_supplier ON supplier_offer(supplier_id);

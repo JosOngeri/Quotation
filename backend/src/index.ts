@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import http from 'http';
 import passport from 'passport';
 import logger from './config/logging';
@@ -12,7 +12,7 @@ import { specs, swaggerUiExpress } from './swagger';
 import { AuditLogger } from './middleware/audit-logging';
 import { WebSocketService } from './services/websocket';
 import cacheService from './services/cache';
-import { performanceMiddleware, performanceMonitor } from './services/performance-monitor';
+import performanceMonitor, { performanceMiddleware } from './services/performance-monitor';
 import { OAuthService } from './services/oauth';
 import authRoutes from './routes/auth';
 import workspaceRoutes from './routes/workspace';
@@ -34,8 +34,9 @@ import rateLimitDashboardRoutes from './routes/rate-limit-dashboard';
 import reportBuilderRoutes from './routes/report-builder';
 import workflowRoutes from './routes/workflow';
 import errorRoutes from './routes/errors';
-
-dotenv.config();
+import productCategoryRoutes from './routes/product-categories';
+import quoteTemplateRoutes from './routes/quote-templates';
+import clientPortalRoutes from './routes/client-portal';
 
 const app = express();
 const PORT = env.PORT;
@@ -117,6 +118,9 @@ app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/rate-limit', rateLimitDashboardRoutes);
 app.use('/api/v1/reports', reportBuilderRoutes);
 app.use('/api/v1/workflows', workflowRoutes);
+app.use('/api/v1/product-categories', productCategoryRoutes);
+app.use('/api/v1/quote-templates', quoteTemplateRoutes);
+app.use('/api/v1/client-portal', clientPortalRoutes);
 app.use('/health', healthRoutes);
 app.use('/api/v1/errors', errorRoutes);
 

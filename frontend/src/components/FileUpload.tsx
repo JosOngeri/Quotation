@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import axios from 'axios';
+import api from '../lib/axios';
 
 interface FileUploadProps {
   uploadType?: 'quotes' | 'projects' | 'suppliers' | 'general';
@@ -28,13 +28,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
-    // Validate file count
     if (multiple && files.length > maxFiles) {
       onError?.(`Maximum ${maxFiles} files allowed`);
       return;
     }
 
-    // Validate file types
     const allowedTypes = [
       'application/pdf',
       'application/msword',
@@ -53,7 +51,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
       return;
     }
 
-    // Validate file sizes (10MB max)
     const maxSize = 10 * 1024 * 1024;
     const oversizedFiles = files.filter(file => file.size > maxSize);
     if (oversizedFiles.length > 0) {
@@ -88,11 +85,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
       if (entityType) formData.append('entityType', entityType);
       if (entityId) formData.append('entityId', entityId);
 
-      const endpoint = multiple 
-        ? '/api/v1/files/upload-multiple'
-        : '/api/v1/files/upload';
+      const endpoint = multiple ? '/files/upload-multiple' : '/files/upload';
 
-      const response = await axios.post(endpoint, formData, {
+      const response = await api.post(endpoint, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
@@ -135,20 +130,24 @@ const FileUpload: React.FC<FileUploadProps> = ({
           onChange={handleFileSelect}
           multiple={multiple}
           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
-          className="file-input"
+          className="file-input sr-only"
           disabled={uploading}
+          id="file-upload-input"
+          aria-label="Choose files to upload"
         />
+        <label htmlFor="file-upload-input" className="sr-only">Upload file</label>
         
         <button
           onClick={() => fileInputRef.current?.click()}
           className="select-files-btn"
           disabled={uploading}
+          type="button"
         >
           {multiple ? 'Select Files' : 'Select File'}
         </button>
 
         {selectedFiles.length > 0 && (
-          <div className="selected-files">
+          <div className="selected-files" role="status" aria-label="Selected files">
             <h4>Selected Files:</h4>
             <ul>
               {selectedFiles.map((file, index) => (
@@ -165,13 +164,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
             onClick={handleUpload}
             className="upload-btn"
             disabled={uploading}
+            type="button"
+            aria-busy={uploading}
           >
             {uploading ? 'Uploading...' : 'Upload'}
           </button>
         )}
 
         {uploading && (
-          <div className="progress-bar">
+          <div className="progress-bar" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
             <div
               className="progress-fill"
               style={{ width: `${progress}%` }}

@@ -23,6 +23,7 @@ interface QuoteItem {
   name: string;
   description?: string;
   quantity: number;
+  unit: string;
   unit_price: number;
   total: number;
 }
@@ -87,12 +88,12 @@ export class PDFGenerator {
   }
 
   private async fetchQuoteData(quoteId: string, workspaceId: string): Promise<QuoteData> {
-    // Fetch quote header
+    // Fetch quote header (singular table names: quote, client)
     const quoteResult = await this.pool.query(
       `SELECT q.*, c.name as client_name, c.address as client_address, 
               c.email as client_email, c.phone as client_phone
-       FROM quotes q
-       JOIN clients c ON q.client_id = c.id
+       FROM quote q
+       JOIN client c ON q.client_id = c.id
        WHERE q.id = $1 AND q.workspace_id = $2`,
       [quoteId, workspaceId]
     );
@@ -103,24 +104,40 @@ export class PDFGenerator {
 
     const quote = quoteResult.rows[0];
 
-    // Fetch quote items
+    // Fetch revision totals
+    let revision = { subtotal_amount_minor: 0, tax_amount_minor: 0, total_amount_minor: 0 };
+    if (quote.current_revision_id) {
+      const revResult = await this.pool.query(
+        'SELECT subtotal_amount_minor, tax_amount_minor, total_amount_minor FROM quote_revision WHERE id = $1',
+        [quote.current_revision_id]
+      );
+      if (revResult.rows.length > 0) revision = revResult.rows[0];
+    }
+
+    // Fetch quote items via quote_node for the quote's current revision.
+    // Include node title/section context and product name when available.
     const itemsResult = await this.pool.query(
-      `SELECT * FROM quote_items WHERE quote_id = $1 ORDER BY created_at`,
-      [quoteId]
+      `SELECT i.*, n.title as node_title, p.name as product_name
+       FROM quote_item i
+       JOIN quote_node n ON i.node_id = n.id
+       LEFT JOIN product p ON i.product_id = p.id
+       WHERE n.revision_id = $1
+       ORDER BY n.ordinal, i.created_at`,
+      [quote.current_revision_id]
     );
 
     const items: QuoteItem[] = itemsResult.rows.map(item => ({
-      name: item.name,
-      description: item.description,
+      name: item.product_name || item.node_title || 'Line item',
+      description: item.pricing_rule || undefined,
       quantity: item.quantity,
-      unit_price: item.unit_price_minor / 100, // Convert from minor units
-      total: item.total_minor / 100
+      unit: item.unit,
+      unit_price: item.sell_price_minor / 100, // Convert from minor units
+      total: item.line_total_minor / 100
     }));
 
-    // Calculate totals
-    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const taxAmount = subtotal * 0.16; // 16% tax (adjust as needed)
-    const total = subtotal + taxAmount;
+    const subtotal = revision.subtotal_amount_minor / 100;
+    const taxAmount = revision.tax_amount_minor / 100;
+    const total = revision.total_amount_minor / 100;
 
     return {
       id: quote.id,
@@ -143,7 +160,7 @@ export class PDFGenerator {
 
   private async fetchWorkspaceData(workspaceId: string): Promise<WorkspaceData> {
     const result = await this.pool.query(
-      'SELECT * FROM workspaces WHERE id = $1',
+      'SELECT * FROM workspace WHERE id = $1',
       [workspaceId]
     );
 
@@ -203,7 +220,9 @@ export class PDFGenerator {
     doc.setFont('helvetica', 'normal');
     doc.text(`Quote #: ${quote.id.substring(0, 8).toUpperCase()}`, 150, yPosition + 8);
     doc.text(`Date: ${new Date(quote.created_at).toLocaleDateString()}`, 150, yPosition + 16);
-    doc.text(`Valid Until: ${new Date(quote.valid_until).toLocaleDateString()}`, 150, yPosition + 24);
+    if (quote.valid_until) {
+      doc.text(`Valid Until: ${new Date(quote.valid_until).toLocaleDateString()}`, 150, yPosition + 24);
+    }
 
     // Client details
     doc.setFontSize(12);
@@ -242,9 +261,10 @@ export class PDFGenerator {
     doc.setFont('helvetica', 'bold');
     doc.text('#', 22, startY + 7);
     doc.text('Description', 35, startY + 7);
-    doc.text('Quantity', 95, startY + 7);
-    doc.text('Unit Price', 125, startY + 7);
-    doc.text('Total', 155, startY + 7);
+    doc.text('Qty', 95, startY + 7);
+    doc.text('Unit', 110, startY + 7);
+    doc.text('Unit Price', 130, startY + 7);
+    doc.text('Total', 160, startY + 7);
 
     // Table rows
     doc.setFont('helvetica', 'normal');
@@ -258,10 +278,11 @@ export class PDFGenerator {
       }
 
       doc.text(`${index + 1}`, 22, yPosition + 7);
-      doc.text(item.name.substring(0, 35), 35, yPosition + 7);
+      doc.text(item.name.substring(0, 30), 35, yPosition + 7);
       doc.text(item.quantity.toString(), 95, yPosition + 7);
-      doc.text(`${item.unit_price.toFixed(2)}`, 125, yPosition + 7);
-      doc.text(`${item.total.toFixed(2)}`, 155, yPosition + 7);
+      doc.text((item.unit || '').substring(0, 8), 110, yPosition + 7);
+      doc.text(`${item.unit_price.toFixed(2)}`, 130, yPosition + 7);
+      doc.text(`${item.total.toFixed(2)}`, 160, yPosition + 7);
 
       yPosition += rowHeight;
     });
@@ -283,7 +304,7 @@ export class PDFGenerator {
     doc.text(`${quote.subtotal.toFixed(2)} ${quote.currency}`, 170, startY, { align: 'right' });
 
     // Tax
-    doc.text('Tax (16%):', xPosition, startY + 8);
+    doc.text('Tax:', xPosition, startY + 8);
     doc.text(`${quote.tax_amount.toFixed(2)} ${quote.currency}`, 170, startY + 8, { align: 'right' });
 
     // Total

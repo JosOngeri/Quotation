@@ -193,7 +193,7 @@ export class AIService {
       );
 
       const clientData = clientResult.rows[0];
-      const riskScore = 0;
+      let riskScore = 0;
       const factors: string[] = [];
 
       if (clientData.avg_cost_variance && parseFloat(clientData.avg_cost_variance) > 15) {
