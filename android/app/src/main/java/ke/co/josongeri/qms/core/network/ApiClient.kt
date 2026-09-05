@@ -1,6 +1,6 @@
 package ke.co.josongeri.qms.core.network
 
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import ke.co.josongeri.qms.BuildConfig
 import ke.co.josongeri.qms.core.config.HostProvider
 import ke.co.josongeri.qms.core.storage.TokenStore
